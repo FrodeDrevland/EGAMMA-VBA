@@ -32,7 +32,7 @@ For inquiries or collaboration on the `EGAMMA-VBA` library, contact:
 Dr. Drevland is dedicated to the continuous development of the `EGAMMA-VBA` library and welcomes feedback, suggestions, and contributions from the community.
 
 License
--------
+________
 This library is distributed under the MIT License. See `LICENSE <https://github.com/FrodeDrevland/EGAMMA-VBA/blob/main/LICENSE>`_ for more information.
 
 

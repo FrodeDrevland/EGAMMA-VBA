@@ -17,7 +17,7 @@ For instance, to calculate the cumulative probability for a value of 200 in an e
 
 Statistical Measures
 --------------------
-The EGAMMA suite includes a range of functions designed to compute various statistical measures based on the parameters of an expanded gamma distribution (alpha, beta, and delta). These functions operate similarly to standard Excel functions:
+The EGAMMA library includes a range of functions designed to compute various statistical measures based on the parameters of the expanded gamma distribution (alpha, beta, and delta). These functions operate similarly to standard Excel functions:
 
 - ``EGAMMA_MEAN(alpha, beta, delta)``: Calculates the mean.
 - ``EGAMMA_MODE(alpha, beta, delta)``: Calculates the mode.
