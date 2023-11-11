@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Functions &mdash; EGAMMA-VBA 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EGAMMA-VBA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.html">Mathematical Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EGAMMA-VBA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/functions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="functions">
+<span id="id1"></span><h1>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_DIST(x,</span> <span class="pre">alpha,</span> <span class="pre">beta,</span> <span class="pre">delta,</span> <span class="pre">cumulative):</span></span></dt>
+<dd><p>Calculate the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Required. The value at which the function is evaluated.</p></li>
+<li><p><strong>alpha</strong> – Required. The shape parameter of the distribution.</p></li>
+<li><p><strong>beta</strong> – Required. The scale parameter of the distribution. Negative beta entails a left skewed distribution.</p></li>
+<li><p><strong>delta</strong> – Required. The location  parameter of the distribution.</p></li>
+<li><p><strong>cumulative</strong> – Required. A logical value that determines the form of the function. If cumulative is TRUE, GAMMA.DIST returns the cumulative distribution function; if FALSE, it returns the probability density function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the (cumulative) gamma distribution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_INV(probability,</span> <span class="pre">alpha,</span> <span class="pre">beta,</span> <span class="pre">delta):</span></span></dt>
+<dd><p>Calculate the inverse of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probability</strong> – The probability for which the inverse is calculated.</p></li>
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>delta</strong> – The location  parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The inverse value of the expanded gamma distribution for the given probability.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_MEAN(alpha,</span> <span class="pre">beta,</span> <span class="pre">delta):</span></span></dt>
+<dd><p>Calculate the mean of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>delta</strong> – The location  parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The mean of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_MODE(alpha,</span> <span class="pre">beta,</span> <span class="pre">delta):</span></span></dt>
+<dd><p>Calculate the mode of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>delta</strong> – The location  parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The mode of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_MEDIAN(alpha,</span> <span class="pre">beta,</span> <span class="pre">delta):</span></span></dt>
+<dd><p>Calculate the median of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>delta</strong> – The location  parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The median of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_VAR(alpha,</span> <span class="pre">beta):</span></span></dt>
+<dd><p>Calculate the variance of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The variance of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_STDDEV(alpha,</span> <span class="pre">beta):</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The standard deviation of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_SKEW(alpha,</span> <span class="pre">beta):</span></span></dt>
+<dd><p>Calculate the skewness of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The skewness of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_KURT(alpha):</span></span></dt>
+<dd><p>Calculate the skewness of the expanded gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> – The shape parameter of the expanded gamma distribution.</p></li>
+<li><p><strong>beta</strong> – The scale parameter of the expanded gamma distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The skewness of the expanded gamma distribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p># The functions EGAMMA_TPE_TO_PARAMS, FindAlphaAtModeEqualsProbability, FindAlpha, and EGAMMA_FIT_TO_PARAMS are complex and would require similarly detailed docstrings. Each function should have a description of its purpose, parameters, return value, and any exceptions.</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_FIT_TO_PARAMS(*args):</span></span></dt>
+<dd><p>Fit the parameters of the expanded gamma distribution to a given set of data points.</p>
+<p>This function estimates the alpha, beta, and delta parameters of the expanded  gamma distribution,
+based on the provided data using the method of moments. It uses the skewness of the data to estimate alpha, then calculates beta
+using the standard deviation, and finally computes delta from the mean, alpha, and beta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – A variable number of arrays or lists containing numerical data points.
+These are combined into a single dataset for the analysis.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the estimated parameters [alpha, beta, delta] of the extended gamma distribution.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the input data does not allow for a proper fit, e.g., if it leads to divide-by-zero errors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">EGAMMA_TPE_TO_PARAMS(low,</span> <span class="pre">likely,</span> <span class="pre">high,</span> <span class="pre">low_probability=0.1):</span></span></dt>
+<dd><p>Estimate the parameters of the expanded gamma distribution based on a three-point estimate.</p>
+<p>This function uses a low, likely, and high estimate to determine the parameters of the extended gamma distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low</strong> – The low estimate of the distribution.</p></li>
+<li><p><strong>likely</strong> – The most likely estimate of the distribution.</p></li>
+<li><p><strong>high</strong> – The high estimate of the distribution.</p></li>
+<li><p><strong>low_probability</strong> – The probability of the low  estimates (default is 0.1).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the estimated parameters [alpha, beta, delta] of the extended gamma distribution.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the input values are inconsistent (e.g., low &gt; likely, high &lt; likely, or all values are equal).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Frode Drevland.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

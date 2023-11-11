@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Importing the EGAMMA VBA Code into an Excel Workbook &mdash; EGAMMA-VBA 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Usage" href="../usage.html" />
+    <link rel="prev" title="Install the EGAMMA.xlam Plugin for Excel" href="install-xlam.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            EGAMMA-VBA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math.html">Mathematical Definitions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install-xlam.html">Install the EGAMMA.xlam Plugin for Excel</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Importing the EGAMMA VBA Code into an Excel Workbook</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-download-the-egamma-bas-file">Step 1: Download the EGAMMA.bas File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-enable-the-developer-tab-in-excel">Step 2: Enable the Developer Tab in Excel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-access-the-vba-editor">Step 3: Access the VBA Editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-4-import-the-bas-file">Step 4: Import the .bas File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-5-save-your-workbook-with-macros">Step 5: Save Your Workbook with Macros</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-6-enable-macros-if-necessary">Step 6: Enable Macros if Necessary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting-tips">Troubleshooting Tips</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EGAMMA-VBA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Installation</a></li>
+      <li class="breadcrumb-item active">Importing the EGAMMA VBA Code into an Excel Workbook</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/installation/install-bas.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="importing-the-egamma-vba-code-into-an-excel-workbook">
+<span id="bas"></span><h1>Importing the EGAMMA VBA Code into an Excel Workbook<a class="headerlink" href="#importing-the-egamma-vba-code-into-an-excel-workbook" title="Link to this heading"></a></h1>
+<p>This guide outlines the steps to integrate the EGAMMA VBA code into an individual Excel workbook, which allows you to utilize EGAMMA’s capabilities within that specific file. If you wish to extend EGAMMA’s functionalities to all workbooks on your system, consider installing the EGAMMA.xlam plugin instead (see <a class="reference internal" href="install-xlam.html#xlam"><span class="std std-ref">Install the EGAMMA.xlam Plugin for Excel</span></a> for installation guidance).</p>
+<p>To begin using the EGAMMA VBA code within a single workbook, you will need to download the EGAMMA.bas file. This file is a VBA module containing the necessary code to be imported into the VBA editor of Excel. Doing so enables you to tailor and engage with the EGAMMA features directly in your chosen Excel workbook.</p>
+<p>Please follow the detailed steps below to import the EGAMMA.bas file into your workbook:</p>
+<section id="step-1-download-the-egamma-bas-file">
+<h2>Step 1: Download the EGAMMA.bas File<a class="headerlink" href="#step-1-download-the-egamma-bas-file" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Visit the [EGAMMA-VBA GitHub Releases page](<a class="reference external" href="https://github.com/FrodeDrevland/EGAMMA-VBA/releases/latest">https://github.com/FrodeDrevland/EGAMMA-VBA/releases/latest</a>) to access the latest version of the EGAMMA.bas file.</p></li>
+<li><p>Click on the link for the EGAMMA.bas file to initiate the download.</p></li>
+<li><p>Save the file to a familiar directory on your computer for easy retrieval.</p></li>
+</ul>
+</section>
+<section id="step-2-enable-the-developer-tab-in-excel">
+<h2>Step 2: Enable the Developer Tab in Excel<a class="headerlink" href="#step-2-enable-the-developer-tab-in-excel" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>For Excel 2010 and newer:
+- Navigate to the <code class="docutils literal notranslate"><span class="pre">File</span></code> tab, select <code class="docutils literal notranslate"><span class="pre">Options</span></code>, and then choose <code class="docutils literal notranslate"><span class="pre">Customize</span> <span class="pre">Ribbon</span></code>.
+- In the customization area, ensure the <code class="docutils literal notranslate"><span class="pre">Developer</span></code> checkbox is selected and confirm with <code class="docutils literal notranslate"><span class="pre">OK</span></code>.</p></li>
+<li><p>For Excel 2007:
+- Click the Microsoft Office Button, select <code class="docutils literal notranslate"><span class="pre">Excel</span> <span class="pre">Options</span></code>, and within the <code class="docutils literal notranslate"><span class="pre">Popular</span></code> category, activate the <code class="docutils literal notranslate"><span class="pre">Show</span> <span class="pre">Developer</span> <span class="pre">tab</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">Ribbon</span></code> option.</p></li>
+</ul>
+</section>
+<section id="step-3-access-the-vba-editor">
+<h2>Step 3: Access the VBA Editor<a class="headerlink" href="#step-3-access-the-vba-editor" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>From the Developer tab, initiate the <code class="docutils literal notranslate"><span class="pre">Visual</span> <span class="pre">Basic</span></code> command to open the VBA editor.</p></li>
+</ul>
+</section>
+<section id="step-4-import-the-bas-file">
+<h2>Step 4: Import the .bas File<a class="headerlink" href="#step-4-import-the-bas-file" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Within the VBA editor, right-click on the <code class="docutils literal notranslate"><span class="pre">VBAProject</span></code> pertaining to your workbook.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">Import</span> <span class="pre">File...</span></code> and navigate to the directory where the EGAMMA.bas file is located.</p></li>
+<li><p>Select the file and opt for <code class="docutils literal notranslate"><span class="pre">Open</span></code> to import it into your project.</p></li>
+</ul>
+</section>
+<section id="step-5-save-your-workbook-with-macros">
+<h2>Step 5: Save Your Workbook with Macros<a class="headerlink" href="#step-5-save-your-workbook-with-macros" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Return to Excel and save your workbook by selecting <code class="docutils literal notranslate"><span class="pre">Save</span></code>.</p></li>
+<li><p>If your workbook is in .xlsx format, you’ll need to switch to the .xlsm format to preserve the VBA code.</p></li>
+</ul>
+</section>
+<section id="step-6-enable-macros-if-necessary">
+<h2>Step 6: Enable Macros if Necessary<a class="headerlink" href="#step-6-enable-macros-if-necessary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>To execute the VBA code, ensure that macros are enabled by visiting the <code class="docutils literal notranslate"><span class="pre">File</span></code> tab, selecting <code class="docutils literal notranslate"><span class="pre">Options</span></code>, followed by <code class="docutils literal notranslate"><span class="pre">Trust</span> <span class="pre">Center</span></code>, and then <code class="docutils literal notranslate"><span class="pre">Trust</span> <span class="pre">Center</span> <span class="pre">Settings...</span></code>.</p></li>
+<li><p>In the Macro Settings section, choose a suitable option to enable macros, keeping security in mind.</p></li>
+</ul>
+</section>
+<section id="troubleshooting-tips">
+<h2>Troubleshooting Tips<a class="headerlink" href="#troubleshooting-tips" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>If the Developer tab or VBA editor is not visible, they may need to be enabled in your Excel settings.</p></li>
+<li><p>Should you face any issues with the code execution, verify the compatibility of the code with your Excel version and check for required references.</p></li>
+</ul>
+<p>Always back up your data before importing a .bas file, particularly if it includes extensive macros or code that could modify your data significantly.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install-xlam.html" class="btn btn-neutral float-left" title="Install the EGAMMA.xlam Plugin for Excel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Frode Drevland.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
