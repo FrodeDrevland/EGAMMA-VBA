@@ -11,7 +11,8 @@ Please follow the detailed steps below to import the EGAMMA.bas file into your w
 
 Step 1: Download the EGAMMA.bas File
 -------------------------------------
-- Access the download link provided at XXXXXXX (replace with the actual URL) to retrieve the EGAMMA.bas file.
+- Visit the [EGAMMA-VBA GitHub Releases page](https://github.com/FrodeDrevland/EGAMMA-VBA/releases/latest) to access the latest version of the EGAMMA.bas file.
+- Click on the link for the EGAMMA.bas file to initiate the download.
 - Save the file to a familiar directory on your computer for easy retrieval.
 
 Step 2: Enable the Developer Tab in Excel

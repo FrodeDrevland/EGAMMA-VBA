@@ -11,7 +11,7 @@ To equip your Excel environment with the EGAMMA.xlam plugin, please proceed with
 
 Step 1: Download the Plugin
 ---------------------------
-- Navigate to the official EGAMMA plugin download page. (Please replace this placeholder with the actual URL where the plugin is hosted.)
+- Visit the [EGAMMA-VBA GitHub Releases page](https://github.com/FrodeDrevland/EGAMMA-VBA/releases/latest)
 - Click on the download link for the EGAMMA.xlam file.
 - Save the file to a known location on your computer, such as your Desktop or a dedicated Downloads folder.
 
