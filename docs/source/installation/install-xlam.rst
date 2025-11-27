@@ -44,7 +44,7 @@ Step 5: Confirm Installation
 
 Step 6: Enable Macros if Necessary
 ----------------------------------
-- If the plugin includes macros and they are not working, you may need to enable them:
+- The plugin relies on includes macros. If the formuals are not working, you may need to enable macros:
   - Go to the ``File`` tab, click on ``Options``, then select ``Trust Center``, and click on the ``Trust Center Settings...`` button.
   - In the Trust Center, select ``Macro Settings`` and choose the appropriate setting to enable macros. Be cautious and only enable macros from trusted sources.
 
