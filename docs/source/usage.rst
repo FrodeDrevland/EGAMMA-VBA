@@ -23,9 +23,9 @@ The EGAMMA library includes a range of functions designed to compute various sta
 - ``EGAMMA_MODE(alpha, beta, delta)``: Calculates the mode.
 - ``EGAMMA_MEDIAN(alpha, beta, delta)``: Calculates the median.
 - ``EGAMMA_VAR(alpha, beta)``: Calculates the variance.
-- ``EGAMMA_STDEV(alpha, beta)``: Calculates the standard deviation.
+- ``EGAMMA_STDDEV(alpha, beta)``: Calculates the standard deviation.
 - ``EGAMMA_SKEW(alpha, beta)``: Calculates the skewness.
-- ``EGAMMA_KURT(alpha)``: Calculates the kurtosis.
+- ``EGAMMA_KURT(alpha)``: Calculates the *excess* kurtosis.
 
 Parameter estimation
 --------------------
@@ -43,9 +43,28 @@ The EGAMMA_TPE_TO_PARAMS function requires three key values as arguments: the lo
 
 The function outputs a 3x1 array: alpha in the function's cell, and beta and delta in the two adjacent cells to the right. If these adjacent cells are not empty, the function will return ``#SPILL!``, indicating it cannot display the results.
 
+Not every three-point estimate can be fitted. The mode of the fitted
+distribution cannot fall outside the interval the two elicited percentiles
+enclose, which limits how lopsided an estimate may be: at the default
+``low_probability`` of 0.1 the skewness cannot exceed about 1.86 in magnitude.
+An estimate that violates ``low <= most-likely <= high`` returns ``#N/A``; a
+``low-probability`` outside the open interval (0, 0.5), or a fit that cannot
+converge, returns ``#NUM!``.
+
+A perfectly symmetric estimate, where the mode sits exactly midway, is a
+special case: no finite shape parameter matches it exactly, so the function
+returns a very large one. The elicited values are then reproduced to about 15
+parts per million of the elicited range rather than exactly. For any other
+admissible estimate they are reproduced to within about 2.5e-11 of the range.
+
 EGAMMA_FIT_TO_PARAMS
 """""""""""""""""""""
 EGAMMA_FIT_TO_PARAMS is designed to estimate the alpha, beta, and delta parameters of the Expanded Gamma Distribution from a given data set. This function uses the method of moments, employing the skewness of the data to estimate alpha, the standard deviation for beta, and the mean, alpha, and beta to calculate delta.
+
+The ``egamma`` Python library implements the same estimator as
+``fit(data, method='mom')``, so results from the two agree. Its default,
+``method='mle'``, uses maximum likelihood instead and will generally give
+slightly different parameters from the same sample.
 
 .. code-block:: none
 

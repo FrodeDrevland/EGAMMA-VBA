@@ -1,0 +1,17 @@
+# Sphinx build output
+docs/build/
+
+# Excel lock and backup files
+~$*.xlam
+~$*.xlsx
+*.xlk
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Stray copies from downloads (e.g. "EGAMMA (1).bas")
+*-1.*
+* (1).*

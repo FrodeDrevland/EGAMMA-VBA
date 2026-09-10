@@ -1,3 +1,9 @@
-docs export-ignore
+# Keep generated HTML out of source archives, but keep the documentation
+# sources: a release archive is what the DOI points at and should be
+# self-contained.
+docs/build export-ignore
 .git* export-ignore
-EGAMMA.xlam export-ignore
+
+# EGAMMA.xlam is deliberately NOT export-ignored. It is the add-in the README
+# tells people to install, so it must be present in the release archive and in
+# the archival deposit made from it.

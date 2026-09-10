@@ -1,6 +1,42 @@
 Option Explicit
 
-Function EGAMMA_DIST(x As Double, alpha As Double, beta As Double, delta As Double, cumulative As Boolean) As Double
+' Largest shape parameter the fitting routines will return. A symmetric
+' three-point estimate is only reproducible in the limit as alpha tends to
+' infinity, so a finite stand-in is needed. Excel's GAMMA.INV also loses
+' reliability well before this value, which is why it is not set higher.
+Private Const ALPHA_MAX As Double = 1000000000#
+
+' Relative acceptance threshold on the target ratio. The reproduction error of
+' the elicited values is bounded by THRESHOLD / (2 * (2 - THRESHOLD)).
+Private Const THRESHOLD As Double = 0.0000000001
+
+Private Const MAX_ITER As Long = 200
+
+' Library version. Reported by EGAMMA_VERSION() so a workbook can record which
+' build produced its numbers.
+Private Const EGAMMA_LIB_VERSION As String = "1.1.0"
+
+
+Function EGAMMA_VERSION() As String
+    EGAMMA_VERSION = EGAMMA_LIB_VERSION
+End Function
+
+
+' Ratio of the two half-ranges produced by a given shape parameter. This is
+' the quantity the three-point fit matches.
+Private Function TargetRatio(alpha As Double, low_prob As Double) As Double
+    TargetRatio = ((alpha - 1) - WorksheetFunction.Gamma_Inv(low_prob, alpha, 1)) / _
+                  (WorksheetFunction.Gamma_Inv(1 - low_prob, alpha, 1) - (alpha - 1))
+End Function
+
+' Returns Variant so that an error value can be returned; a Double-typed
+' function cannot hold CVErr and raises a type mismatch instead.
+Function EGAMMA_DIST(x As Double, alpha As Double, beta As Double, delta As Double, cumulative As Boolean) As Variant
+    If alpha <= 0 Then
+        EGAMMA_DIST = CVErr(xlErrNum)
+        Exit Function
+    End If
+
     If cumulative Then
         ' CDF
         If beta > 0 Then
@@ -24,8 +60,8 @@ Function EGAMMA_DIST(x As Double, alpha As Double, beta As Double, delta As Doub
         ' PDF
         If beta = 0 Then
             EGAMMA_DIST = CVErr(xlErrNum)
-        ElseIf (x - delta) / beta < 0 Then
-            EGAMMA_DIST = CVErr(xlErrNA)    ' outside support
+        ElseIf (x - delta) / beta <= 0 Then
+            EGAMMA_DIST = 0                 ' outside support: density is zero
         Else
             EGAMMA_DIST = WorksheetFunction.Gamma_Dist(Abs(x - delta), alpha, Abs(beta), False)
         End If
@@ -33,8 +69,13 @@ Function EGAMMA_DIST(x As Double, alpha As Double, beta As Double, delta As Doub
 End Function
 
 
-Function EGAMMA_INV(probability As Double, alpha As Double, beta As Double, delta As Double) As Double
-     If beta > 0 Then
+Function EGAMMA_INV(probability As Double, alpha As Double, beta As Double, delta As Double) As Variant
+    If alpha <= 0 Or beta = 0 Or probability <= 0 Or probability >= 1 Then
+        EGAMMA_INV = CVErr(xlErrNum)
+        Exit Function
+    End If
+
+    If beta > 0 Then
         EGAMMA_INV = delta + WorksheetFunction.Gamma_Inv(probability, alpha, beta)
     Else
         EGAMMA_INV = delta - WorksheetFunction.Gamma_Inv(1 - probability, alpha, Abs(beta))
@@ -71,15 +112,26 @@ End Function
 Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, Optional low_probability As Double = 0.1)
     Dim returnVal(1 To 3) As Double
     
-    If (low = likely And high = likely) Or low > likely Or high < likely Then
+    If low_probability <= 0 Or low_probability >= 0.5 Then
+        EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNum)
+
+    ElseIf (low = likely And high = likely) Or low > likely Or high < likely Then
         EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNA)
- 
+
     Else
         If low = likely Or high = likely Then
             returnVal(1) = FindAlphaAtModeEqualsProbability(low_probability)
         Else
             returnVal(1) = FindAlpha(low, likely, high, low_probability)
         End If
+
+        ' The shape search reports failure as a non-positive value. Propagate
+        ' it rather than using it as a shape parameter.
+        If returnVal(1) <= 0 Then
+            EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNum)
+            Exit Function
+        End If
+
         returnVal(2) = (high - low) / (WorksheetFunction.Gamma_Inv(1 - low_probability, returnVal(1), 1) - WorksheetFunction.Gamma_Inv(low_probability, returnVal(1), 1))
         If high - likely < likely - low Then returnVal(2) = -returnVal(2)
         returnVal(3) = likely - (returnVal(1) - 1) * returnVal(2)
@@ -87,85 +139,99 @@ Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, O
     End If
 End Function
 
-Private Function FindAlphaAtModeEqualsProbability(probability As Double, Optional decimals As Integer = 10) As Double
+Private Function FindAlphaAtModeEqualsProbability(probability As Double) As Double
+    ' Shape parameter whose mode falls exactly at the given probability.
+    ' Stops on the residual normalised by the standard percentile span, so the
+    ' reproduction bound of the general search covers this case too. Returns 0
+    ' to signal failure.
     Dim skew_low As Double
     Dim skew_high As Double
     Dim skew_mid As Double
     Dim alpha_candidate As Double
     Dim mode As Double
     Dim mode_candidate As Double
+    Dim span As Double
     Dim iter As Long
-    
-    If probability > 0.5 Then
-    probability = 1 - probability
-    End If
-    
-    skew_low = 2 / Sqr(1000000000#)
+
+    If probability > 0.5 Then probability = 1 - probability
+
+    skew_low = 2 / Sqr(ALPHA_MAX)
     skew_high = 2
-    iter = 0
-    
-    While skew_low <= skew_high And iter < 200
-        iter = iter + 1
+
+    For iter = 1 To MAX_ITER
         skew_mid = (skew_low + skew_high) / 2
+        If skew_mid = skew_low Or skew_mid = skew_high Then
+            FindAlphaAtModeEqualsProbability = 0
+            Exit Function
+        End If
         alpha_candidate = 4 / (skew_mid ^ 2)
         mode = alpha_candidate - 1
         mode_candidate = WorksheetFunction.Gamma_Inv(probability, alpha_candidate, 1)
+        span = WorksheetFunction.Gamma_Inv(1 - probability, alpha_candidate, 1) - mode_candidate
 
-        If Round(mode_candidate, decimals) = Round(mode, decimals) Then
+        If Abs(mode_candidate - mode) / span < THRESHOLD / 4 Then
             FindAlphaAtModeEqualsProbability = alpha_candidate
             Exit Function
         ElseIf mode_candidate > mode Then
             skew_high = skew_mid
-        Else:
+        Else
             skew_low = skew_mid
         End If
-    Wend
-    If iter >= 200 Then
-        FindAlphaAtModeEqualsProbability = alpha_candidate 'best effort
-    End If
+    Next iter
+
+    FindAlphaAtModeEqualsProbability = 0
 End Function
 
-Private Function FindAlpha(low As Double, mode As Double, high As Double, Optional low_prob As Double = 0.1, Optional threshold As Double = 0.0000000001) As Double
+Private Function FindAlpha(low As Double, mode As Double, high As Double, Optional low_prob As Double = 0.1, Optional threshold As Double = THRESHOLD) As Double
+    ' Solves the single equation in the shape parameter by bisection on
+    ' skewness. Returns 0 to signal that the threshold could not be met;
+    ' callers must check for this rather than using the value.
     Dim skew_low As Double
     Dim skew_high As Double
     Dim skew_mid As Double
     Dim alpha_candidate As Double
     Dim target_ratio As Double
     Dim current_ratio As Double
+    Dim ratio_max As Double
     Dim iter As Long
 
-    
- target_ratio = (mode - low) / (high - mode)
-    If Abs(target_ratio) > 1 Then target_ratio = 1 / target_ratio
+    target_ratio = (mode - low) / (high - mode)
+    If target_ratio > 1 Then target_ratio = 1 / target_ratio
 
-    If target_ratio > 0.99999 Then
-        FindAlpha = 1000000000#
+    ' The largest ratio the search can reach is the one ALPHA_MAX produces.
+    ' Deriving the symmetry shortcut from it, rather than fixing it, keeps the
+    ' root bracketed for any percentile convention. A fixed cut leaves a band
+    ' of targets that pass the shortcut but lie beyond the bracket.
+    ratio_max = TargetRatio(ALPHA_MAX, low_prob)
+
+    If target_ratio >= ratio_max Then
+        FindAlpha = ALPHA_MAX
         Exit Function
     End If
-    
 
-    skew_low = 2 / (Sqr(1000000000#))
+    skew_low = 2 / Sqr(ALPHA_MAX)
     skew_high = 2
-    iter = 0
-    
-    While skew_low <= skew_high And iter < 200
-        iter = iter + 1
+
+    For iter = 1 To MAX_ITER
         skew_mid = (skew_low + skew_high) / 2
+        If skew_mid = skew_low Or skew_mid = skew_high Then
+            FindAlpha = 0                       ' interval collapsed
+            Exit Function
+        End If
         alpha_candidate = 4 / (skew_mid ^ 2)
-        current_ratio = ((alpha_candidate - 1) - WorksheetFunction.Gamma_Inv(low_prob, alpha_candidate, 1)) / (WorksheetFunction.Gamma_Inv(1 - low_prob, alpha_candidate, 1) - (alpha_candidate - 1))
+        current_ratio = TargetRatio(alpha_candidate, low_prob)
 
         If Abs((current_ratio / target_ratio) - 1) < threshold Then
-             FindAlpha = alpha_candidate
-             Exit Function
+            FindAlpha = alpha_candidate
+            Exit Function
         ElseIf current_ratio < target_ratio Then
             skew_high = skew_mid
-        Else:
+        Else
             skew_low = skew_mid
         End If
-    Wend
-    If iter >= 200 Then
-        FindAlpha = alpha_candidate 'best effort
-    End If
+    Next iter
+
+    FindAlpha = 0                               ' iteration limit reached
 End Function
 
 Function EGAMMA_FIT_TO_PARAMS(ParamArray args() As Variant)
@@ -207,12 +273,13 @@ Function EGAMMA_FIT_TO_PARAMS(ParamArray args() As Variant)
     
     ' Method-of-moments fit
     skew = WorksheetFunction.skew(result)
-    If skew = 0 Then
+    If Abs(skew) < 0.000000001 Then
         ' effectively symmetric; use very large alpha, small beta
-        alpha = 1000000000#
+        alpha = ALPHA_MAX
         beta = WorksheetFunction.StDev(result) / Sqr(alpha)
     Else
         alpha = 4 / (skew * skew)              ' from |skew| = 2 / sqrt(alpha)
+        If alpha > ALPHA_MAX Then alpha = ALPHA_MAX
         beta = WorksheetFunction.StDev(result) / Sqr(alpha)
         If skew < 0 Then beta = -beta          ' left-skew => beta < 0
     End If
@@ -332,6 +399,11 @@ Public Sub RegisterEGammaFunctions()
                 "high: Upper bound of three-point estimate.", _
                 "low_probability: Cumulative probability at low/high (default 0.1)." _
             )
+
+        .MacroOptions _
+            Macro:="EGAMMA_VERSION", _
+            Description:="Version of the EGAMMA-VBA library.", _
+            Category:="User Defined"
 
         .MacroOptions _
             Macro:="EGAMMA_FIT_TO_PARAMS", _
