@@ -1,9 +1,16 @@
-# Keep generated HTML out of source archives, but keep the documentation
-# sources: a release archive is what the DOI points at and should be
-# self-contained.
-docs/build export-ignore
-.git* export-ignore
-
-# EGAMMA.xlam is deliberately NOT export-ignored. It is the add-in the README
+# The release archive is what the DOI points at. It should contain what an
+# Excel user actually needs -- the add-in, the module source, the licence, the
+# changelog and the rendered manual -- and nothing that only matters to someone
+# working inside the repository.
+#
+# EGAMMA.xlam is deliberately NOT export-ignored: it is the add-in the README
 # tells people to install, so it must be present in the release archive and in
-# the archival deposit made from it.
+# the archival deposit made from it. docs/EGAMMA-VBA-manual.pdf is kept for the
+# same reason. The Sphinx sources and build machinery that produce it are not,
+# since nobody installing an Excel add-in is going to run sphinx-build.
+
+docs/build     export-ignore
+docs/source    export-ignore
+docs/Makefile  export-ignore
+docs/make.bat  export-ignore
+.git*          export-ignore

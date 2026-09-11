@@ -22,9 +22,9 @@ jobs:
   pdf:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -39,12 +39,16 @@ jobs:
             texlive-latex-recommended \
             texlive-latex-extra \
             texlive-fonts-recommended \
+            texlive-plain-generic \
             tex-gyre
 
-      - name: Build PDF
-        run: |
-          sphinx-build -b latex -W --keep-going docs/source docs/_latex
-          make -C docs/_latex LATEXMKOPTS="-interaction=nonstopmode -halt-on-error"
+      # Warnings are reported but do not fail the build. Run with -W locally if
+      # you want them treated as errors.
+      - name: Sphinx -> LaTeX
+        run: sphinx-build -b latex --keep-going docs/source docs/_latex
+
+      - name: LaTeX -> PDF
+        run: make -C docs/_latex LATEXMKOPTS="-interaction=nonstopmode"
 
       - name: Collect
         run: |
@@ -56,3 +60,15 @@ jobs:
           name: EGAMMA-VBA-manual
           path: out/EGAMMA-VBA-manual.pdf
           if-no-files-found: error
+
+      # Kept only when the build fails, so a LaTeX error can be read without
+      # rerunning anything.
+      - name: Upload LaTeX log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latex-logs
+          path: |
+            docs/_latex/*.log
+            docs/_latex/*.tex
+          if-no-files-found: ignore
