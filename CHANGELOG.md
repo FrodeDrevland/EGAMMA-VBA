@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.1
+
+Packaging only. The library is unchanged from 1.1.0; the worksheet functions
+and the results they produce are identical.
+
+### Fixed
+
+- **Generated Sphinx output was tracked in the repository.** `docs/build/` was
+  listed in `.gitignore`, but had been committed before that rule was added, so
+  it stayed tracked and bloated the repository. It is no longer tracked.
+- **The release archive carried documentation sources but no readable
+  documentation.** It contained the reStructuredText under `docs/source`, which
+  is of no use to someone installing an Excel add-in, and nothing rendered. The
+  archive now excludes `docs` entirely and ships `EGAMMA-VBA-manual.pdf` at the
+  top level instead, alongside the add-in.
+
+### Changed
+
+- The manual's version is now read from `EGAMMA_LIB_VERSION` in `EGAMMA.bas`
+  rather than repeated in the Sphinx configuration, so the title page cannot
+  claim a version the library does not report.
+
 ## 1.1.0
 
 Corrections to the fitting and distribution functions. The three-point fit

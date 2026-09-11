@@ -14,7 +14,7 @@ Private Const MAX_ITER As Long = 200
 
 ' Library version. Reported by EGAMMA_VERSION() so a workbook can record which
 ' build produced its numbers.
-Private Const EGAMMA_LIB_VERSION As String = "1.1.0"
+Private Const EGAMMA_LIB_VERSION As String = "1.1.1"
 
 
 Function EGAMMA_VERSION() As String
