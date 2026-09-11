@@ -69,6 +69,12 @@ Upon installation, EGAMMA-VBA provides a suite of new functions in Excel. For de
 ## Documentation
 Find in-depth documentation on the expanded gamma distribution and library functions at [EGAMMA-VBA Documentation](https://frodedrevland.github.io/EGAMMA-VBA).
 
+The same documentation is included as a PDF,
+[EGAMMA-VBA-manual.pdf](EGAMMA-VBA-manual.pdf), so that it travels with the
+add-in: it is present in every release archive and in the archived deposit made
+from it, and can be read offline. It is generated from the sources under
+`docs/`, and its title page reports the same version as `EGAMMA_VERSION()`.
+
 ## Support
 For assistance or to report issues, please use the [GitHub Issue Tracker](https://github.com/FrodeDrevland/EGAMMA-VBA/issues).
 
