@@ -1,5 +1,6 @@
 # Sphinx build output
 docs/build/
+docs/_latex/
 
 # Excel lock and backup files
 ~$*.xlam

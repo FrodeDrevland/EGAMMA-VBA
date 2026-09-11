@@ -1,0 +1,58 @@
+name: manual
+
+# Builds the PDF manual that ships inside the release archive.
+#
+# The PDF has to be committed to the repository rather than attached to the
+# GitHub release: Zenodo's GitHub integration deposits the repository zipball
+# at the tag and ignores release assets, so anything not tracked at the tag is
+# absent from the archival record the DOI points at.
+#
+# This workflow does not commit anything. It builds the PDF and uploads it as
+# a workflow artifact; download it and commit it as part of cutting a release,
+# so that a generated file only ever enters the repository deliberately.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'docs/source/**'
+      - '.github/workflows/manual.yml'
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Sphinx
+        run: pip install sphinx sphinx_rtd_theme myst_parser
+
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            latexmk \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            tex-gyre
+
+      - name: Build PDF
+        run: |
+          sphinx-build -b latex -W --keep-going docs/source docs/_latex
+          make -C docs/_latex LATEXMKOPTS="-interaction=nonstopmode -halt-on-error"
+
+      - name: Collect
+        run: |
+          mkdir -p out
+          cp docs/_latex/EGAMMA-VBA-manual.pdf out/EGAMMA-VBA-manual.pdf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EGAMMA-VBA-manual
+          path: out/EGAMMA-VBA-manual.pdf
+          if-no-files-found: error

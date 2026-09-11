@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'EGAMMA-VBA'
-copyright = '2023, Frode Drevland'
+copyright = '2023-2026, Frode Drevland'
 author = 'Frode Drevland'
-release = '1.0.0'
+release = '1.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -26,3 +26,22 @@ exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+# -- Options for LaTeX / PDF output ------------------------------------------
+# The PDF is the form of the documentation that ships in the release archive,
+# because the audience for an Excel add-in cannot be expected to run Sphinx.
+# Naming the output file explicitly keeps the build reproducible and lets the
+# release workflow pick it up without globbing.
+
+latex_documents = [
+    ('index',
+     'EGAMMA-VBA-manual.tex',
+     'eGamma-VBA: expanded Gamma distribution for Microsoft Excel',
+     'Frode Drevland',
+     'manual'),
+]
+
+latex_elements = {
+    'papersize': 'a4paper',
+    'pointsize': '11pt',
+}
