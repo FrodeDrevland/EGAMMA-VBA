@@ -1,0 +1,24 @@
+{
+  "upload_type": "software",
+  "title": "eGamma-VBA: an expanded Gamma distribution library for Microsoft Excel",
+  "creators": [
+    {
+      "name": "Drevland, Frode",
+      "affiliation": "Norwegian University of Science and Technology (NTNU)",
+      "orcid": "0000-0002-4596-1564"
+    }
+  ],
+  "license": "MIT",
+  "language": "eng",
+  "keywords": [
+    "expanded Gamma distribution",
+    "Pearson Type III distribution",
+    "three-point estimation",
+    "parameter estimation",
+    "Monte Carlo simulation",
+    "cost estimation",
+    "Microsoft Excel",
+    "VBA"
+  ],
+  "description": "<p>eGamma-VBA implements the expanded Gamma distribution for Microsoft Excel: a three-parameter Gamma distribution whose scale parameter is allowed to be negative, so that the density is reflected about its location parameter and can represent left-skewed as well as right-skewed data. In that form the family is Pearson Type III, expressed in the Gamma distribution's own shape, scale and location parameters. Excel provides no three-parameter Gamma distribution among its built-in functions, which has been a practical obstacle to using the family in spreadsheet work at all.</p><p>The library is distributed as an add-in and as an importable module, and exposes its functionality as worksheet functions: EGAMMA_DIST and EGAMMA_INV for the density, distribution and quantile functions; EGAMMA_MEAN, EGAMMA_MODE, EGAMMA_MEDIAN, EGAMMA_VAR, EGAMMA_STDDEV, EGAMMA_SKEW and EGAMMA_KURT for the moments; EGAMMA_TPE_TO_PARAMS to fit the distribution to a three-point estimate, where a low, most likely and high value are supplied and the outer two are interpreted at a chosen pair of symmetric percentiles; and EGAMMA_FIT_TO_PARAMS to fit it to a sample. The three-point routine is intended for probabilistic cost and schedule analysis, where estimates elicited from experts must be turned into distributions that a Monte Carlo simulation can sample.</p><p>It matches the Python implementation, eGamma, against a shared set of conformance test vectors. The release archive contains the add-in, the module source and the manual as a PDF.</p><p>Source code: <a href=\"https://github.com/FrodeDrevland/EGAMMA-VBA\">github.com/FrodeDrevland/EGAMMA-VBA</a></p>"
+}

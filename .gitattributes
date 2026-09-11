@@ -1,16 +1,20 @@
 # The release archive is what the DOI points at. It should contain what an
 # Excel user actually needs -- the add-in, the module source, the licence, the
-# changelog and the rendered manual -- and nothing that only matters to someone
-# working inside the repository.
+# changelog and the rendered manual, all at the top level -- and nothing that
+# only matters to someone working inside the repository.
 #
-# EGAMMA.xlam is deliberately NOT export-ignored: it is the add-in the README
-# tells people to install, so it must be present in the release archive and in
-# the archival deposit made from it. docs/EGAMMA-VBA-manual.pdf is kept for the
-# same reason. The Sphinx sources and build machinery that produce it are not,
-# since nobody installing an Excel add-in is going to run sphinx-build.
+# Two generated files are deliberately NOT export-ignored. EGAMMA.xlam is the
+# add-in the README tells people to install. EGAMMA-VBA-manual.pdf is the
+# documentation in the only form this audience can use; both are committed at
+# the repository root so that they appear at the root of the archive, and so of
+# the archival deposit made from it.
+#
+# Everything under docs/ is the Sphinx machinery that produces the manual.
+# It stays in the repository and out of the archive.
 
-docs/build     export-ignore
-docs/source    export-ignore
-docs/Makefile  export-ignore
-docs/make.bat  export-ignore
-.git*          export-ignore
+docs   export-ignore
+.git*  export-ignore
+
+# Zenodo deposition metadata, read by Zenodo from the repository rather than
+# from the archive.
+.zenodo.json export-ignore
