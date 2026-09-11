@@ -15,7 +15,10 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'docs/source/**'
+      # EGAMMA.bas is an input to the build, not just to the library: conf.py
+      # reads EGAMMA_LIB_VERSION out of it to stamp the manual's title page.
+      - 'EGAMMA.bas'
+      - 'docs/**'
       - '.github/workflows/manual.yml'
 
 jobs:
