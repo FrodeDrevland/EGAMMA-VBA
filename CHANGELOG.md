@@ -41,13 +41,13 @@ three-point fit.
   is admissible. The absolute rule imposes the same reproduction requirement
   near an outer value as at it.
 
-### Added
+### Documentation
 
-- **`EGAMMA_TPE_AT_CEILING(low, likely, high, [low_probability])`**, which is
-  `TRUE` when the fit returned the shape ceiling rather than a shape meeting the
-  tolerance. An estimate too near symmetry to resolve reproduces the elicited
-  values to about 1.5E-5 of the range rather than to the tolerance; returning
-  the ceiling silently left no way to tell the two apart.
+- **The shape ceiling is now documented.** An estimate too near symmetry to
+  resolve is fitted at the ceiling and reproduces the elicited values to about
+  1.5E-5 of the range rather than to the tolerance. `EGAMMA_TPE_TO_PARAMS`
+  returns a shape of exactly 1E9 in that case and no other, so the value itself
+  identifies it; the README and the manual now say so.
 
 ### Removed
 

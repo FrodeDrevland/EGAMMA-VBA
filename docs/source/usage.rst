@@ -52,9 +52,9 @@ The fitted parameters recover the three elicited values to within
 too close to symmetry to resolve: a perfectly symmetric estimate corresponds to
 an infinite shape parameter, so those are fitted at the library's finite
 ceiling and recover the elicited values to about :math:`1.5\times10^{-5}` of
-the range instead. ``EGAMMA_TPE_AT_CEILING(low, most-likely, high,
-[low-probability])`` returns ``TRUE`` for such an estimate and ``FALSE`` for
-one fitted to the tolerance.
+the range instead. Such a fit returns a shape parameter of exactly
+:math:`10^9`, the library's ceiling, which is how you recognise the case; no
+other estimate produces that value.
 
 A most likely value that equals, or nearly equals, one of the outer values is
 admissible and is fitted like any other estimate; the endpoint case is not

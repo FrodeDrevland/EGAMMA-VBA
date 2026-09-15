@@ -44,7 +44,7 @@ as `fit(data, method='mom')`, so results from the two agree.
 - **Statistical Measures**: Functions for calculating mean, mode, median, variance, standard deviation, skewness, and kurtosis.
 - **Parameter Estimation**: Functions for data fitting and three-point estimation.
   - **Data Fitting**: EGAMMA_FIT_TO_PARAMS fits the expanded gamma distribution to your data.
-  - **Three-Point Estimation**: EGAMMA_TPE_TO_PARAMS calculates distribution parameters from a three-point estimate, and EGAMMA_TPE_AT_CEILING reports whether the fit met its tolerance or fell back on the shape ceiling.
+  - **Three-Point Estimation**: EGAMMA_TPE_TO_PARAMS calculates distribution parameters from a three-point estimate.
 - **Comprehensive Documentation**: Detailed guides for each function, including examples and parameter descriptions.
 
 ### Things worth knowing
@@ -58,8 +58,9 @@ A perfectly symmetric estimate is a special case, since no finite
 gamma-shaped distribution is exactly symmetric. The function returns a very
 large shape parameter; the elicited values then come back to within about 15
 parts per million of the range rather than exactly. Otherwise they are
-reproduced to within about 2.5e-11 of the range. `EGAMMA_TPE_AT_CEILING` tells
-the two apart.
+reproduced to within about 2.5e-11 of the range. A fit that fell back on the
+ceiling returns a shape parameter of exactly 1E9, so you can tell the two
+apart from the value itself.
 
 A most likely value that sits at, or very close to, one of the outer values is
 not a special case: it is fitted like any other estimate, to the same

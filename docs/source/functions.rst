@@ -91,24 +91,6 @@ Functions
     :param alpha: The shape parameter of the expanded gamma distribution.
     :return: The excess kurtosis of the expanded gamma distribution.
 
-.. py:function:: EGAMMA_TPE_AT_CEILING(low, likely, high, low_probability=0.1):
-
-    Report whether a three-point fit met its tolerance or returned the shape
-    ceiling instead.
-
-    A perfectly symmetric estimate is only reproducible in the limit as the
-    shape tends to infinity, so estimates too near symmetry to resolve are
-    fitted at the library's finite ceiling. Those fits reproduce the elicited
-    values to about :math:`1.5\times10^{-5}` of the elicited range rather than
-    to the tolerance of :math:`2.5\times10^{-11}`. Returning the ceiling
-    silently would leave no way to tell the two cases apart.
-
-    :param low: The low estimate of the distribution.
-    :param likely: The most likely estimate of the distribution.
-    :param high: The high estimate of the distribution.
-    :param low_probability: The probability of the low estimate (default is 0.1).
-    :return: TRUE if the fit returned the shape ceiling, FALSE if it met the tolerance.
-
 .. py:function:: EGAMMA_FIT_TO_PARAMS(*args):
     
     Fit the parameters of the expanded gamma distribution to a given set of data points.
@@ -151,8 +133,13 @@ Functions
     gives :math:`t = 0` and goes through the same search; there is no separate
     case for it.
 
-    An estimate too near symmetry to resolve is fitted at the shape ceiling
-    instead; use ``EGAMMA_TPE_AT_CEILING`` to detect this.
+    An estimate too near symmetry to resolve cannot be fitted to that
+    tolerance, because a perfectly symmetric estimate is only reproducible in
+    the limit as the shape tends to infinity. Such an estimate is fitted at
+    the library's finite ceiling instead, and the returned shape is then
+    exactly :math:`10^9`, which is how a caller recognises the case. The
+    elicited values are reproduced to about :math:`1.5\times10^{-5}` of the
+    elicited range rather than to the tolerance.
 
     :param low: The low estimate of the distribution.
     :param likely: The most likely estimate of the distribution.

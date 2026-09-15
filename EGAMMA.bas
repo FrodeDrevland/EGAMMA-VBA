@@ -4,6 +4,13 @@ Option Explicit
 ' three-point estimate is only reproducible in the limit as alpha tends to
 ' infinity, so a finite stand-in is needed. Excel's GAMMA.INV also loses
 ' reliability well before this value, which is why it is not set higher.
+'
+' This value doubles as the signal that an estimate was too near symmetry to
+' resolve: EGAMMA_TPE_TO_PARAMS returns exactly this shape in that case, and
+' the elicited values are then reproduced to about 1.5E-5 of the elicited range
+' rather than to TOLERANCE. A caller that cares can compare the returned shape
+' with 1E9. No separate function reports this, because the shape is already in
+' the cell the user typed the formula in.
 Private Const ALPHA_MAX As Double = 1000000000#
 
 ' Acceptance tolerance on the normalised mode position. The search stops when
@@ -226,23 +233,6 @@ Private Function FindAlpha(low As Double, mode As Double, high As Double, _
 End Function
 
 
-' True when the fit returned the shape ceiling rather than a shape meeting the
-' tolerance. The elicited values are then reproduced to the ceiling
-' approximation, about 1.5E-5 of the elicited range at P_L = 0.10, rather than
-' to the tolerance. Returning ALPHA_MAX silently would leave a user unable to
-' tell the two apart, so this is exposed as a worksheet function.
-Function EGAMMA_TPE_AT_CEILING(low As Double, likely As Double, high As Double, _
-                               Optional low_probability As Double = 0.1) As Variant
-    Dim params As Variant
-    params = EGAMMA_TPE_TO_PARAMS(low, likely, high, low_probability)
-    If IsError(params) Then
-        EGAMMA_TPE_AT_CEILING = params
-    Else
-        EGAMMA_TPE_AT_CEILING = (params(1) = ALPHA_MAX)
-    End If
-End Function
-
-
 Function EGAMMA_FIT_TO_PARAMS(ParamArray args() As Variant)
     Dim alpha As Double
     Dim beta As Double
@@ -401,17 +391,6 @@ Public Sub RegisterEGammaFunctions()
         .MacroOptions _
             Macro:="EGAMMA_TPE_TO_PARAMS", _
             Description:="Fits expanded gamma parameters from three-point estimate (low, likely, high).", _
-            Category:="User Defined", _
-            ArgumentDescriptions:=Array( _
-                "low: Lower bound of three-point estimate.", _
-                "likely: Most likely (mode) value.", _
-                "high: Upper bound of three-point estimate.", _
-                "low_probability: Cumulative probability at low/high (default 0.1)." _
-            )
-
-        .MacroOptions _
-            Macro:="EGAMMA_TPE_AT_CEILING", _
-            Description:="TRUE when a three-point fit returned the shape ceiling rather than a shape meeting the tolerance.", _
             Category:="User Defined", _
             ArgumentDescriptions:=Array( _
                 "low: Lower bound of three-point estimate.", _
