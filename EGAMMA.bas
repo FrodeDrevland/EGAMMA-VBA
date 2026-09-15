@@ -149,8 +149,7 @@ Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, O
 End Function
 
 Private Function FindAlpha(low As Double, mode As Double, high As Double, _
-                           Optional low_prob As Double = 0.1, _
-                           Optional tolerance As Double = TOLERANCE) As Double
+                           Optional low_prob As Double = 0.1) As Double
     ' Finds the shape parameter by bisection on the magnitude of skewness,
     ' matching the mode's position within the elicited range:
     '
@@ -213,7 +212,7 @@ Private Function FindAlpha(low As Double, mode As Double, high As Double, _
         alpha_candidate = 4 / (skew_mid ^ 2)
         candidate_position = ModePosition(alpha_candidate, low_prob)
 
-        If Abs(candidate_position - target_position) < tolerance Then
+        If Abs(candidate_position - target_position) < TOLERANCE Then
             FindAlpha = alpha_candidate
             Exit Function
         ElseIf candidate_position < target_position Then
@@ -328,7 +327,7 @@ Public Sub RegisterEGammaFunctions()
             Description:="Inverse expanded gamma distribution (quantile function).", _
             Category:="User Defined", _
             ArgumentDescriptions:=Array( _
-                "probability: Cumulative probability (0–1).", _
+                "probability: Cumulative probability (0 to 1).", _
                 "alpha: Shape parameter (>0).", _
                 "beta: Scale parameter (sign controls tail direction).", _
                 "delta: Location (shift) parameter." _
