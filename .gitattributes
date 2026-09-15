@@ -1,20 +1,21 @@
-# The release archive is what the DOI points at. It should contain what an
-# Excel user actually needs -- the add-in, the module source, the licence, the
-# changelog and the rendered manual, all at the top level -- and nothing that
-# only matters to someone working inside the repository.
+# What `git archive` puts in the release archive, which is what GitHub's
+# release zipball contains and therefore what Zenodo deposits under the DOI.
 #
-# Two generated files are deliberately NOT export-ignored. EGAMMA.xlam is the
-# add-in the README tells people to install. EGAMMA-VBA-manual.pdf is the
-# documentation in the only form this audience can use; both are committed at
-# the repository root so that they appear at the root of the archive, and so of
+# The archive should hold what someone needs to install, use and verify the
+# add-in -- the add-in itself, the module source it is built from, the manual,
+# the changelog and the licence -- and nothing that only matters to someone
+# working in the repository.
+#
+# The documentation ships as EGAMMA-VBA-manual.pdf at the top level. The
+# Sphinx sources that produce it do not: the audience for an Excel add-in
+# cannot be expected to run Sphinx, and shipping reStructuredText without a
+# renderer is not documentation. This is the opposite of the choice made in
+# the companion Python library, where the documentation source is part of the
+# source a reader may want to rebuild from.
+docs          export-ignore
+.git*         export-ignore
+.zenodo.json  export-ignore
+
+# EGAMMA.xlam is deliberately NOT export-ignored. It is the add-in the README
+# tells people to install, so it must be present in the release archive and in
 # the archival deposit made from it.
-#
-# Everything under docs/ is the Sphinx machinery that produces the manual.
-# It stays in the repository and out of the archive.
-
-docs   export-ignore
-.git*  export-ignore
-
-# Zenodo deposition metadata, read by Zenodo from the repository rather than
-# from the archive.
-.zenodo.json export-ignore
