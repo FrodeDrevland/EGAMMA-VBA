@@ -67,8 +67,8 @@ Functions
 
 
 .. py:function:: EGAMMA_STDDEV(alpha, beta):
-    
 
+    Calculate the standard deviation of the expanded gamma distribution.
 
     :param alpha: The shape parameter of the expanded gamma distribution.
     :param beta: The scale parameter of the expanded gamma distribution.
@@ -86,13 +86,28 @@ Functions
     
 .. py:function:: EGAMMA_KURT(alpha):
 
-    Calculate the skewness of the expanded gamma distribution.
+    Calculate the excess kurtosis of the expanded gamma distribution.
 
     :param alpha: The shape parameter of the expanded gamma distribution.
-    :param beta: The scale parameter of the expanded gamma distribution.
-    :return: The skewness of the expanded gamma distribution.
+    :return: The excess kurtosis of the expanded gamma distribution.
 
-# The functions EGAMMA_TPE_TO_PARAMS, FindAlphaAtModeEqualsProbability, FindAlpha, and EGAMMA_FIT_TO_PARAMS are complex and would require similarly detailed docstrings. Each function should have a description of its purpose, parameters, return value, and any exceptions.
+.. py:function:: EGAMMA_TPE_AT_CEILING(low, likely, high, low_probability=0.1):
+
+    Report whether a three-point fit met its tolerance or returned the shape
+    ceiling instead.
+
+    A perfectly symmetric estimate is only reproducible in the limit as the
+    shape tends to infinity, so estimates too near symmetry to resolve are
+    fitted at the library's finite ceiling. Those fits reproduce the elicited
+    values to about :math:`1.5\times10^{-5}` of the elicited range rather than
+    to the tolerance of :math:`2.5\times10^{-11}`. Returning the ceiling
+    silently would leave no way to tell the two cases apart.
+
+    :param low: The low estimate of the distribution.
+    :param likely: The most likely estimate of the distribution.
+    :param high: The high estimate of the distribution.
+    :param low_probability: The probability of the low estimate (default is 0.1).
+    :return: TRUE if the fit returned the shape ceiling, FALSE if it met the tolerance.
 
 .. py:function:: EGAMMA_FIT_TO_PARAMS(*args):
     
@@ -114,12 +129,37 @@ Functions
 
     This function uses a low, likely, and high estimate to determine the parameters of the extended gamma distribution.
 
+    The shape parameter is found by bisection on the magnitude of the
+    skewness. The quantity matched is the mode's position within the elicited
+    range,
+
+    .. math::
+        t = \dfrac{\min(\text{likely} - \text{low},\ \text{high} - \text{likely})}
+                  {\text{high} - \text{low}},
+
+    against the position the standard Gamma with that shape produces between
+    its two percentiles,
+
+    .. math::
+        t_\alpha = \dfrac{\alpha - 1 - q_L}{q_H - q_L},
+
+    and the search stops when the two differ by less than
+    :math:`2.5\times10^{-11}`. That difference is itself the largest error, as
+    a fraction of the elicited range, with which the three elicited values are
+    recovered from the fitted parameters, so the tolerance is stated directly
+    in the quantity of interest. A most likely value equal to an outer value
+    gives :math:`t = 0` and goes through the same search; there is no separate
+    case for it.
+
+    An estimate too near symmetry to resolve is fitted at the shape ceiling
+    instead; use ``EGAMMA_TPE_AT_CEILING`` to detect this.
+
     :param low: The low estimate of the distribution.
     :param likely: The most likely estimate of the distribution.
     :param high: The high estimate of the distribution.
     :param low_probability: The probability of the low  estimates (default is 0.1).
     :return: A list containing the estimated parameters [alpha, beta, delta] of the extended gamma distribution.
-    :raises ValueError: If the input values are inconsistent (e.g., low > likely, high < likely, or all values are equal).
+    :raises ValueError: Returns ``#N/A`` if the input values are inconsistent (low > likely, high < likely, or low >= high), ``#NUM!`` if the low probability is outside (0, 0.5) or the search cannot meet its tolerance.
     
 
 

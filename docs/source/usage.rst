@@ -25,7 +25,11 @@ The EGAMMA library includes a range of functions designed to compute various sta
 - ``EGAMMA_VAR(alpha, beta)``: Calculates the variance.
 - ``EGAMMA_STDDEV(alpha, beta)``: Calculates the standard deviation.
 - ``EGAMMA_SKEW(alpha, beta)``: Calculates the skewness.
-- ``EGAMMA_KURT(alpha)``: Calculates the *excess* kurtosis.
+- ``EGAMMA_KURT(alpha)``: Calculates the excess kurtosis.
+
+These are functions of the distribution's parameters alone, and apply equally
+whether the parameters came from a three-point estimate, from a fit to data, or
+were entered directly.
 
 Parameter estimation
 --------------------
@@ -43,28 +47,24 @@ The EGAMMA_TPE_TO_PARAMS function requires three key values as arguments: the lo
 
 The function outputs a 3x1 array: alpha in the function's cell, and beta and delta in the two adjacent cells to the right. If these adjacent cells are not empty, the function will return ``#SPILL!``, indicating it cannot display the results.
 
-Not every three-point estimate can be fitted. The mode of the fitted
-distribution cannot fall outside the interval the two elicited percentiles
-enclose, which limits how lopsided an estimate may be: at the default
-``low_probability`` of 0.1 the skewness cannot exceed about 1.86 in magnitude.
-An estimate that violates ``low <= most-likely <= high`` returns ``#N/A``; a
-``low-probability`` outside the open interval (0, 0.5), or a fit that cannot
-converge, returns ``#NUM!``.
+The fitted parameters recover the three elicited values to within
+:math:`2.5\times10^{-11}` of the elicited range. The exception is an estimate
+too close to symmetry to resolve: a perfectly symmetric estimate corresponds to
+an infinite shape parameter, so those are fitted at the library's finite
+ceiling and recover the elicited values to about :math:`1.5\times10^{-5}` of
+the range instead. ``EGAMMA_TPE_AT_CEILING(low, most-likely, high,
+[low-probability])`` returns ``TRUE`` for such an estimate and ``FALSE`` for
+one fitted to the tolerance.
 
-A perfectly symmetric estimate, where the mode sits exactly midway, is a
-special case: no finite shape parameter matches it exactly, so the function
-returns a very large one. The elicited values are then reproduced to about 15
-parts per million of the elicited range rather than exactly. For any other
-admissible estimate they are reproduced to within about 2.5e-11 of the range.
+A most likely value that equals, or nearly equals, one of the outer values is
+admissible and is fitted like any other estimate; the endpoint case is not
+treated separately. An estimate is rejected with ``#N/A`` only if the three
+values are not ordered, that is unless ``low <= most-likely <= high`` and
+``low < high``.
 
 EGAMMA_FIT_TO_PARAMS
 """""""""""""""""""""
 EGAMMA_FIT_TO_PARAMS is designed to estimate the alpha, beta, and delta parameters of the Expanded Gamma Distribution from a given data set. This function uses the method of moments, employing the skewness of the data to estimate alpha, the standard deviation for beta, and the mean, alpha, and beta to calculate delta.
-
-The ``egamma`` Python library implements the same estimator as
-``fit(data, method='mom')``, so results from the two agree. Its default,
-``method='mle'``, uses maximum likelihood instead and will generally give
-slightly different parameters from the same sample.
 
 .. code-block:: none
 

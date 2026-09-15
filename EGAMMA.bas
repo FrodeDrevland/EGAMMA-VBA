@@ -6,15 +6,21 @@ Option Explicit
 ' reliability well before this value, which is why it is not set higher.
 Private Const ALPHA_MAX As Double = 1000000000#
 
-' Relative acceptance threshold on the target ratio. The reproduction error of
-' the elicited values is bounded by THRESHOLD / (2 * (2 - THRESHOLD)).
-Private Const THRESHOLD As Double = 0.0000000001
+' Acceptance tolerance on the normalised mode position. The search stops when
+' the fitted mode position differs from the elicited one by less than this, and
+' that difference is itself the maximum normalised error in the three reproduced
+' values, so the tolerance is stated directly in the quantity a user cares about.
+' It replaces the relative threshold on the half-range ratio used up to version
+' 1.1.1, which demanded ever finer absolute agreement as the mode approached an
+' outer value. The value preserves the reproduction accuracy that the old
+' relative threshold of 1E-10 implied.
+Private Const TOLERANCE As Double = 0.000000000025
 
 Private Const MAX_ITER As Long = 200
 
 ' Library version. Reported by EGAMMA_VERSION() so a workbook can record which
 ' build produced its numbers.
-Private Const EGAMMA_LIB_VERSION As String = "1.1.1"
+Private Const EGAMMA_LIB_VERSION As String = "1.2.0"
 
 
 Function EGAMMA_VERSION() As String
@@ -22,11 +28,16 @@ Function EGAMMA_VERSION() As String
 End Function
 
 
-' Ratio of the two half-ranges produced by a given shape parameter. This is
-' the quantity the three-point fit matches.
-Private Function TargetRatio(alpha As Double, low_prob As Double) As Double
-    TargetRatio = ((alpha - 1) - WorksheetFunction.Gamma_Inv(low_prob, alpha, 1)) / _
-                  (WorksheetFunction.Gamma_Inv(1 - low_prob, alpha, 1) - (alpha - 1))
+' Position of the standard Gamma mode within the interval spanned by the two
+' percentiles, as a fraction of that interval. This is the quantity the
+' three-point fit matches: the elicited target is the mode's position within
+' the elicited range, so the two are directly comparable.
+Private Function ModePosition(alpha As Double, low_prob As Double) As Double
+    Dim q_low As Double
+    Dim q_high As Double
+    q_low = WorksheetFunction.Gamma_Inv(low_prob, alpha, 1)
+    q_high = WorksheetFunction.Gamma_Inv(1 - low_prob, alpha, 1)
+    ModePosition = (alpha - 1 - q_low) / (q_high - q_low)
 End Function
 
 ' Returns Variant so that an error value can be returned; a Double-typed
@@ -115,15 +126,13 @@ Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, O
     If low_probability <= 0 Or low_probability >= 0.5 Then
         EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNum)
 
-    ElseIf (low = likely And high = likely) Or low > likely Or high < likely Then
+    ElseIf low >= high Or low > likely Or high < likely Then
         EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNA)
 
     Else
-        If low = likely Or high = likely Then
-            returnVal(1) = FindAlphaAtModeEqualsProbability(low_probability)
-        Else
-            returnVal(1) = FindAlpha(low, likely, high, low_probability)
-        End If
+        ' A mode at an outer value gives a target position of zero and goes
+        ' through the ordinary search; there is no separate endpoint routine.
+        returnVal(1) = FindAlpha(low, likely, high, low_probability)
 
         ' The shape search reports failure as a non-positive value. Propagate
         ' it rather than using it as a shape parameter.
@@ -139,73 +148,56 @@ Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, O
     End If
 End Function
 
-Private Function FindAlphaAtModeEqualsProbability(probability As Double) As Double
-    ' Shape parameter whose mode falls exactly at the given probability.
-    ' Stops on the residual normalised by the standard percentile span, so the
-    ' reproduction bound of the general search covers this case too. Returns 0
-    ' to signal failure.
+Private Function FindAlpha(low As Double, mode As Double, high As Double, _
+                           Optional low_prob As Double = 0.1, _
+                           Optional tolerance As Double = TOLERANCE) As Double
+    ' Finds the shape parameter by bisection on the magnitude of skewness,
+    ' matching the mode's position within the elicited range:
+    '
+    '     target_position = min(mode - low, high - mode) / (high - low)
+    '     candidate       = (alpha - 1 - q_low) / (q_high - q_low)
+    '
+    ' and stopping when the two differ by less than the tolerance. That
+    ' difference is the maximum normalised error in the three reproduced
+    ' values, so the stopping rule is expressed in the quantity being promised.
+    '
+    ' Matching positions rather than the half-range ratio matters near an outer
+    ' value. The ratio tends to zero there, so a relative test on it would
+    ' demand progressively finer absolute agreement even though the accuracy
+    ' required of the elicited values had not changed. Both skew directions and
+    ' the mode-at-an-outer-value cases reduce to the same target, so no separate
+    ' endpoint routine is needed.
+    '
+    ' Returns 0 to signal that the tolerance could not be met; callers must
+    ' check for this rather than using the value.
     Dim skew_low As Double
     Dim skew_high As Double
     Dim skew_mid As Double
     Dim alpha_candidate As Double
-    Dim mode As Double
-    Dim mode_candidate As Double
-    Dim span As Double
+    Dim target_position As Double
+    Dim candidate_position As Double
+    Dim max_position As Double
     Dim iter As Long
 
-    If probability > 0.5 Then probability = 1 - probability
+    If high - mode < mode - low Then
+        target_position = (high - mode) / (high - low)
+    Else
+        target_position = (mode - low) / (high - low)
+    End If
 
-    skew_low = 2 / Sqr(ALPHA_MAX)
-    skew_high = 2
+    ' The greatest position the search can reach is the one ALPHA_MAX produces,
+    ' and it depends on the percentile convention: about 0.499985 at P_L = 0.10
+    ' but 0.457948 at P_L = 0.4999. Deriving the cut from ALPHA_MAX rather than
+    ' fixing it keeps the root bracketed under any convention.
+    max_position = ModePosition(ALPHA_MAX, low_prob)
 
-    For iter = 1 To MAX_ITER
-        skew_mid = (skew_low + skew_high) / 2
-        If skew_mid = skew_low Or skew_mid = skew_high Then
-            FindAlphaAtModeEqualsProbability = 0
-            Exit Function
-        End If
-        alpha_candidate = 4 / (skew_mid ^ 2)
-        mode = alpha_candidate - 1
-        mode_candidate = WorksheetFunction.Gamma_Inv(probability, alpha_candidate, 1)
-        span = WorksheetFunction.Gamma_Inv(1 - probability, alpha_candidate, 1) - mode_candidate
+    If max_position <= 0 Then
+        FindAlpha = 0                           ' ceiling below the admissible range
+        Exit Function
+    End If
 
-        If Abs(mode_candidate - mode) / span < THRESHOLD / 4 Then
-            FindAlphaAtModeEqualsProbability = alpha_candidate
-            Exit Function
-        ElseIf mode_candidate > mode Then
-            skew_high = skew_mid
-        Else
-            skew_low = skew_mid
-        End If
-    Next iter
-
-    FindAlphaAtModeEqualsProbability = 0
-End Function
-
-Private Function FindAlpha(low As Double, mode As Double, high As Double, Optional low_prob As Double = 0.1, Optional threshold As Double = THRESHOLD) As Double
-    ' Solves the single equation in the shape parameter by bisection on
-    ' skewness. Returns 0 to signal that the threshold could not be met;
-    ' callers must check for this rather than using the value.
-    Dim skew_low As Double
-    Dim skew_high As Double
-    Dim skew_mid As Double
-    Dim alpha_candidate As Double
-    Dim target_ratio As Double
-    Dim current_ratio As Double
-    Dim ratio_max As Double
-    Dim iter As Long
-
-    target_ratio = (mode - low) / (high - mode)
-    If target_ratio > 1 Then target_ratio = 1 / target_ratio
-
-    ' The largest ratio the search can reach is the one ALPHA_MAX produces.
-    ' Deriving the symmetry shortcut from it, rather than fixing it, keeps the
-    ' root bracketed for any percentile convention. A fixed cut leaves a band
-    ' of targets that pass the shortcut but lie beyond the bracket.
-    ratio_max = TargetRatio(ALPHA_MAX, low_prob)
-
-    If target_ratio >= ratio_max Then
-        FindAlpha = ALPHA_MAX
+    If target_position >= max_position Then
+        FindAlpha = ALPHA_MAX                   ' ceiling approximation
         Exit Function
     End If
 
@@ -219,12 +211,12 @@ Private Function FindAlpha(low As Double, mode As Double, high As Double, Option
             Exit Function
         End If
         alpha_candidate = 4 / (skew_mid ^ 2)
-        current_ratio = TargetRatio(alpha_candidate, low_prob)
+        candidate_position = ModePosition(alpha_candidate, low_prob)
 
-        If Abs((current_ratio / target_ratio) - 1) < threshold Then
+        If Abs(candidate_position - target_position) < tolerance Then
             FindAlpha = alpha_candidate
             Exit Function
-        ElseIf current_ratio < target_ratio Then
+        ElseIf candidate_position < target_position Then
             skew_high = skew_mid
         Else
             skew_low = skew_mid
@@ -233,6 +225,24 @@ Private Function FindAlpha(low As Double, mode As Double, high As Double, Option
 
     FindAlpha = 0                               ' iteration limit reached
 End Function
+
+
+' True when the fit returned the shape ceiling rather than a shape meeting the
+' tolerance. The elicited values are then reproduced to the ceiling
+' approximation, about 1.5E-5 of the elicited range at P_L = 0.10, rather than
+' to the tolerance. Returning ALPHA_MAX silently would leave a user unable to
+' tell the two apart, so this is exposed as a worksheet function.
+Function EGAMMA_TPE_AT_CEILING(low As Double, likely As Double, high As Double, _
+                               Optional low_probability As Double = 0.1) As Variant
+    Dim params As Variant
+    params = EGAMMA_TPE_TO_PARAMS(low, likely, high, low_probability)
+    If IsError(params) Then
+        EGAMMA_TPE_AT_CEILING = params
+    Else
+        EGAMMA_TPE_AT_CEILING = (params(1) = ALPHA_MAX)
+    End If
+End Function
+
 
 Function EGAMMA_FIT_TO_PARAMS(ParamArray args() As Variant)
     Dim alpha As Double
@@ -392,6 +402,17 @@ Public Sub RegisterEGammaFunctions()
         .MacroOptions _
             Macro:="EGAMMA_TPE_TO_PARAMS", _
             Description:="Fits expanded gamma parameters from three-point estimate (low, likely, high).", _
+            Category:="User Defined", _
+            ArgumentDescriptions:=Array( _
+                "low: Lower bound of three-point estimate.", _
+                "likely: Most likely (mode) value.", _
+                "high: Upper bound of three-point estimate.", _
+                "low_probability: Cumulative probability at low/high (default 0.1)." _
+            )
+
+        .MacroOptions _
+            Macro:="EGAMMA_TPE_AT_CEILING", _
+            Description:="TRUE when a three-point fit returned the shape ceiling rather than a shape meeting the tolerance.", _
             Category:="User Defined", _
             ArgumentDescriptions:=Array( _
                 "low: Lower bound of three-point estimate.", _

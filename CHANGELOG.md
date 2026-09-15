@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.2.0
+
+The three-point fit now searches on the mode's **position** within the elicited
+range rather than on the half-range ratio, and stops on an absolute tolerance
+rather than a relative one. **Fitted parameters change** in the last few digits
+for most inputs, and estimates with a mode very close to an outer value are now
+fitted where 1.1.1 could refuse them. Workbooks whose numbers came from 1.1.1
+should be recalculated if either matters.
+
+This release matches version 1.2.0 of the companion Python library; the two
+produce the same parameters on the published conformance vectors.
+
+Only the fitting routine changes. The distribution functions are untouched, and
+so are the moments: `EGAMMA_MEAN` remains `alpha * beta + delta` and
+`EGAMMA_STDDEV` remains `SQRT(alpha) * ABS(beta)`, defined from the parameters
+alone, as they must be for a distribution whose parameters did not come from a
+three-point fit.
+
+### Changed
+
+- **The shape search matches mode position.** The target is
+  `min(likely - low, high - likely) / (high - low)` and the model quantity is
+  `(alpha - 1 - q_low) / (q_high - q_low)`. The search stops when the two differ
+  by less than the tolerance. That difference is itself the maximum normalised
+  error in the three reproduced values, so the tolerance is now stated directly
+  in the quantity a user cares about rather than implying it through a bound on
+  the ratio.
+- **`TOLERANCE = 2.5E-11` replaces `THRESHOLD = 1E-10`.** This is not a rename:
+  the old value bounded the relative error in the half-range ratio, the new one
+  bounds the position error directly. 2.5E-11 is the reproduction accuracy the
+  old relative threshold implied, so the intended accuracy is unchanged.
+
+### Fixed
+
+- **A mode very close to an outer value is no longer refused.** The relative
+  stopping rule demanded an absolute agreement proportional to the ratio, which
+  tends to zero as the mode approaches an outer value, so an estimate such as
+  (100, 100.00001, 300) could exhaust the search and return `#NUM!` although it
+  is admissible. The absolute rule imposes the same reproduction requirement
+  near an outer value as at it.
+
+### Added
+
+- **`EGAMMA_TPE_AT_CEILING(low, likely, high, [low_probability])`**, which is
+  `TRUE` when the fit returned the shape ceiling rather than a shape meeting the
+  tolerance. An estimate too near symmetry to resolve reproduces the elicited
+  values to about 1.5E-5 of the range rather than to the tolerance; returning
+  the ceiling silently left no way to tell the two apart.
+
+### Removed
+
+- **The separate endpoint solver.** A mode at an outer value gives a target
+  position of zero and goes through the ordinary search, so
+  `FindAlphaAtModeEqualsProbability` is gone. There is no longer a different
+  code path, or a different tolerance, for the endpoint cases, and
+  `EGAMMA_TPE_TO_PARAMS` no longer branches on them.
+
 ## 1.1.1
 
 Packaging only. The library is unchanged from 1.1.0; the worksheet functions
