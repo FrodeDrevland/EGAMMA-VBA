@@ -38,10 +38,18 @@ Functions
     
     Calculate the mode of the expanded gamma distribution.
 
+    For :math:`\alpha > 1` the density has an interior maximum at
+    :math:`(\alpha - 1)\beta + \delta`. For :math:`0 < \alpha \le 1` it is
+    monotone on its support and the mode lies at the support boundary,
+    :math:`\delta`; the interior expression would place it outside the support
+    altogether. A three-point fit never returns a shape at or below 1, so this
+    distinction arises only for parameters entered directly.
+
     :param alpha: The shape parameter of the expanded gamma distribution.
     :param beta: The scale parameter of the expanded gamma distribution.
     :param delta: The location  parameter of the expanded gamma distribution.
-    :return: The mode of the expanded gamma distribution.
+    :return: The mode of the expanded gamma distribution, or ``#NUM!`` if the
+        shape parameter is not positive.
     
 
 

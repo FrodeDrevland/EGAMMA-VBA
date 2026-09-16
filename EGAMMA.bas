@@ -6,11 +6,18 @@ Option Explicit
 ' reliability well before this value, which is why it is not set higher.
 '
 ' This value doubles as the signal that an estimate was too near symmetry to
-' resolve: EGAMMA_TPE_TO_PARAMS returns exactly this shape in that case, and
-' the elicited values are then reproduced to about 1.5E-5 of the elicited range
-' rather than to TOLERANCE. A caller that cares can compare the returned shape
-' with 1E9. No separate function reports this, because the shape is already in
-' the cell the user typed the formula in.
+' resolve: EGAMMA_TPE_TO_PARAMS returns exactly this shape in that case. A
+' caller that cares can compare the returned shape with 1E9. No separate
+' function reports it, because the shape is already in the cell the user typed
+' the formula in.
+'
+' At this ceiling, and at the default 10th/90th percentile convention, the
+' elicited values are reproduced to about 1.5E-5 of the elicited range rather
+' than to TOLERANCE. That figure belongs to the convention: the ceiling error
+' grows as the elicited percentiles approach the median, reaching about 4.2E-2
+' at a low probability of 0.4999. Raising the ceiling does reduce it; it is not
+' raised because the shape becomes increasingly ill-conditioned near symmetry
+' and GAMMA.INV loses reliability at large shapes.
 Private Const ALPHA_MAX As Double = 1000000000#
 
 ' Acceptance tolerance on the normalised mode position. The search stops when
@@ -27,7 +34,7 @@ Private Const MAX_ITER As Long = 200
 
 ' Library version. Reported by EGAMMA_VERSION() so a workbook can record which
 ' build produced its numbers.
-Private Const EGAMMA_LIB_VERSION As String = "1.2.0"
+Private Const EGAMMA_LIB_VERSION As String = "1.2.1"
 
 
 Function EGAMMA_VERSION() As String
@@ -104,10 +111,24 @@ Function EGAMMA_MEAN(alpha As Double, beta As Double, delta As Double) As Double
     EGAMMA_MEAN = alpha * beta + delta
 End Function
 
-Function EGAMMA_MODE(alpha As Double, beta As Double, delta As Double) As Double
-    EGAMMA_MODE = (alpha - 1) * beta + delta
+' For alpha > 1 the density has an interior maximum at (alpha - 1) * beta +
+' delta. For 0 < alpha <= 1 it is monotone on its support and the mode is at
+' the support boundary, delta; the interior expression would place it outside
+' the support. A three-point fit never returns a shape at or below 1, so this
+' distinction arises only for parameters entered directly.
+Function EGAMMA_MODE(alpha As Double, beta As Double, delta As Double) As Variant
+    If alpha <= 0 Then
+        EGAMMA_MODE = CVErr(xlErrNum)
+    ElseIf alpha <= 1 Then
+        EGAMMA_MODE = delta
+    Else
+        EGAMMA_MODE = (alpha - 1) * beta + delta
+    End If
 End Function
-Function EGAMMA_MEDIAN(alpha As Double, beta As Double, delta As Double) As Double
+' Returns Variant because EGAMMA_INV returns an error value for invalid
+' parameters, and a Double-typed function cannot hold one: it raises a type
+' mismatch at run time instead of putting #NUM! in the cell.
+Function EGAMMA_MEDIAN(alpha As Double, beta As Double, delta As Double) As Variant
     EGAMMA_MEDIAN = EGAMMA_INV(0.5, alpha, beta, delta)
 End Function
 

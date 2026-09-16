@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.2.1
+
+Corrections to the general distribution functions. **The three-point fit is
+unchanged**: `EGAMMA_TPE_TO_PARAMS` returns the same parameters as 1.2.0 for
+every input, so no workbook fitted with 1.2.0 needs recalculating. The
+corrections affect the moments of a distribution whose parameters were entered
+directly rather than fitted.
+
+### Fixed
+
+- **`EGAMMA_MODE` returned a point outside the support for a shape of 1 or
+  less.** For `alpha > 1` the density has an interior maximum at
+  `(alpha - 1) * beta + delta`, but for `0 < alpha <= 1` it is monotone on its
+  support and the mode is at the boundary, `delta`. The function applied the
+  interior expression regardless, so `=EGAMMA_MODE(0.5, 2, 10)` returned 9 — a
+  point the distribution does not reach — where the answer is 10. A shape at or
+  below 1 cannot come out of `EGAMMA_TPE_TO_PARAMS`, whose smallest admissible
+  shape is about 1.156, so no fitted distribution was affected. A non-positive
+  shape now gives `#NUM!` rather than a number for a distribution that does not
+  exist.
+- **`EGAMMA_MEDIAN` raised a type mismatch instead of returning an error
+  value.** It was declared `As Double` but returns whatever `EGAMMA_INV` gives,
+  and `EGAMMA_INV` returns `CVErr(xlErrNum)` for an invalid shape or a zero
+  scale. A Double-typed function cannot hold an error value, so the call failed
+  at run time rather than putting `#NUM!` in the cell. This is the same fault
+  corrected in `EGAMMA_DIST` and `EGAMMA_INV` at 1.1.0; `EGAMMA_MEDIAN` was
+  missed then because it holds no `CVErr` of its own. It is now `As Variant`.
+
+### Documentation
+
+- **The shape-ceiling reproduction figure is tied to its convention.** The
+  stated 1.5E-5 of the elicited range holds at the default 10th/90th
+  percentiles; the ceiling error grows as the elicited percentiles approach the
+  median, reaching about 4.2E-2 at a low probability of 0.4999.
+
+The companion Python library releases 1.2.1 alongside this one. Its method of
+moments had the scale-after-capping fault that this library has never had, and
+the same `mode` fault corrected here; the two remain in agreement.
+
 ## 1.2.0
 
 The three-point fit now searches on the mode's **position** within the elicited
