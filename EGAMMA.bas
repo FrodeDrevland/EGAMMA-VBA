@@ -15,9 +15,11 @@ Option Explicit
 ' elicited values are reproduced to about 1.5E-5 of the elicited range rather
 ' than to TOLERANCE. That figure belongs to the convention: the ceiling error
 ' grows as the elicited percentiles approach the median, reaching about 4.2E-2
-' at a low probability of 0.4999. Raising the ceiling does reduce it; it is not
-' raised because the shape becomes increasingly ill-conditioned near symmetry
-' and GAMMA.INV loses reliability at large shapes.
+' at a low probability of 0.4999. Raising the ceiling does reduce the error at a
+' symmetric estimate, but shape recovery becomes increasingly ill-conditioned
+' near symmetry. The ceiling is an implementation choice rather than a property
+' of the method, to be made together with the numerical functions an
+' implementation has available -- here, Excel's own GAMMA.INV.
 Private Const ALPHA_MAX As Double = 1000000000#
 
 ' Acceptance tolerance on the normalised mode position. The search stops when
@@ -125,6 +127,7 @@ Function EGAMMA_MODE(alpha As Double, beta As Double, delta As Double) As Varian
         EGAMMA_MODE = (alpha - 1) * beta + delta
     End If
 End Function
+
 ' Returns Variant because EGAMMA_INV returns an error value for invalid
 ' parameters, and a Double-typed function cannot hold one: it raises a type
 ' mismatch at run time instead of putting #NUM! in the cell.
