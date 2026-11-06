@@ -113,7 +113,7 @@ Functions
     :raises ValueError: If the input data does not allow for a proper fit, e.g., if it leads to divide-by-zero errors.
     
 
-.. py:function:: EGAMMA_TPE_TO_PARAMS(low, likely, high, low_probability=0.1, ceiling_tolerance=2E-5, require_nonnegative=FALSE):
+.. py:function:: EGAMMA_TPE_TO_PARAMS(low, likely, high, low_probability=0.1, fit_tolerance=2.5E-11, ceiling_tolerance=2E-5, require_nonnegative=FALSE):
     
     Estimate the parameters of the expanded gamma distribution based on a three-point estimate.
 
@@ -150,45 +150,62 @@ Functions
     elicited range rather than to the tolerance, and
     :func:`EGAMMA_TPE_DIAGNOSTICS` reports the case as ``"approximation"``.
 
-    Once the parameters are found, the low, likely and high values are
-    recovered from them and compared with those supplied. The largest
-    difference, as a fraction of the range, must be within
-    :math:`2.5\times10^{-11}` for an ordinary fit, or within
-    ``ceiling_tolerance`` for a fit at the ceiling, in each case plus an
-    allowance of four machine epsilons of the largest magnitude in the
-    recovery, divided by the range. The allowance covers the rounding of the
-    recovery arithmetic itself, which would otherwise refuse fits whose values
-    are large relative to their range. A fit that misses returns ``#NUM!``.
+    Once the parameters are found, the result is accepted only if three rules
+    hold. The tolerance is ``fit_tolerance`` for an ordinary fit and
+    ``ceiling_tolerance`` for a fit at the ceiling.
+
+    1. The position residual :math:`|t_\alpha - t|`, which is the normalised
+       reproduction error in exact arithmetic, is within the tolerance. No
+       allowance is added.
+    2. The estimated rounding uncertainty of the reconstruction check,
+       :math:`4\,\epsilon_{\text{mach}}\,m/(\text{high}-\text{low})`, where
+       :math:`m` is the largest magnitude among the elicited values, the
+       location and the scaled quantiles, is no larger than the tolerance.
+       Otherwise the check cannot verify the accuracy asked for: in double
+       precision this happens at the default tolerance once the values exceed
+       about 28,000 times their range. The factor 4 is an estimate from a
+       first-order count of rounded operations, not a proven bound.
+    3. The low, likely and high values reconstructed from the parameters agree
+       with those supplied to within the tolerance plus that uncertainty.
+
+    A result that fails any rule returns ``#NUM!``, and
+    :func:`EGAMMA_TPE_DIAGNOSTICS` names the rule.
 
     :param low: The low estimate of the distribution.
     :param likely: The most likely estimate of the distribution.
     :param high: The high estimate of the distribution.
     :param low_probability: The probability of the low  estimates (default is 0.1).
-    :param ceiling_tolerance: The error accepted at the shape ceiling, as a
-        fraction of the range (default 2E-5). All five supported percentile
-        conventions meet the default; a symmetric estimate at a convention
-        near the median, such as 0.4999, does not.
+    :param fit_tolerance: The position residual accepted for an ordinary fit,
+        as a fraction of the range (default 2.5E-11). Loosen it for an
+        estimate refused as unverifiable, or fit shifted values instead.
+    :param ceiling_tolerance: The position residual accepted at the shape
+        ceiling, as a fraction of the range (default 2E-5). All five supported
+        percentile conventions meet the default for a symmetric estimate; a
+        convention near the median, such as 0.4999, does not.
     :param require_nonnegative: TRUE to refuse, with ``#NUM!``, a fit whose
         distribution has support below zero (default FALSE).
     :return: A list containing the estimated parameters [alpha, beta, delta] of the extended gamma distribution.
-    :raises ValueError: Returns ``#N/A`` if the input values are inconsistent (low > likely, high < likely, or low >= high), ``#NUM!`` if the low probability or ceiling tolerance is out of range, the search cannot meet its tolerance, the recovered values miss the acceptance bound, or non-negative support was required and not met.
+    :raises ValueError: Returns ``#N/A`` if the input values are inconsistent (low > likely, high < likely, or low >= high), and ``#NUM!`` if an argument is out of range or the fit fails any of the three rules or the non-negative support requirement.
 
 
-.. py:function:: EGAMMA_TPE_DIAGNOSTICS(low, likely, high, low_probability=0.1, ceiling_tolerance=2E-5):
+.. py:function:: EGAMMA_TPE_DIAGNOSTICS(low, likely, high, low_probability=0.1, fit_tolerance=2.5E-11, ceiling_tolerance=2E-5, require_nonnegative=FALSE):
 
-    Report how the fit :func:`EGAMMA_TPE_TO_PARAMS` makes for the same
-    arguments was accepted.
+    Report on the fit :func:`EGAMMA_TPE_TO_PARAMS` makes for the same
+    arguments, including why it failed.
 
-    :return: A list of three values: the status, ``"converged"`` for an
-        ordinary fit or ``"approximation"`` for a fit at the shape ceiling;
-        the largest error with which the elicited values are recovered, as a
+    :return: A list of five values. First the status: ``"converged"`` or
+        ``"approximation"`` (a fit at the shape ceiling) for an accepted fit,
+        and otherwise ``"ceiling tolerance not met"``,
+        ``"precision insufficient"``, ``"reconstruction inconsistent"``,
+        ``"nonnegative support not met"``, ``"search failed"`` or
+        ``"numerical failure"``. Then the position residual, the reconstructed
+        error as computed, and the verification uncertainty, each as a
         fraction of the range; and TRUE if the fitted distribution has support
         below zero. That is always so for a negative scale, whose support is
-        unbounded below, and for a positive scale with a negative location. A
-        converged fit can still be unsuitable for a quantity that cannot be
-        negative.
+        unbounded below, and for a positive scale with a negative location.
+        Values not computed before a failure are ``#N/A``.
     :raises ValueError: Returns the same error value as
-        :func:`EGAMMA_TPE_TO_PARAMS` when the fit fails.
+        :func:`EGAMMA_TPE_TO_PARAMS` when an argument is invalid.
 
 
 

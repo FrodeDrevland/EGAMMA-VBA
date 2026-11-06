@@ -44,7 +44,7 @@ as `fit(data, method='mom')`, so results from the two agree.
 - **Statistical Measures**: Functions for calculating mean, mode, median, variance, standard deviation, skewness, and kurtosis.
 - **Parameter Estimation**: Functions for data fitting and three-point estimation.
   - **Data Fitting**: EGAMMA_FIT_TO_PARAMS fits the expanded gamma distribution to your data.
-  - **Three-Point Estimation**: EGAMMA_TPE_TO_PARAMS calculates distribution parameters from a three-point estimate.
+  - **Three-Point Estimation**: EGAMMA_TPE_TO_PARAMS calculates distribution parameters from a three-point estimate, and EGAMMA_TPE_DIAGNOSTICS reports how that fit was accepted or why it was refused.
 - **Comprehensive Documentation**: Detailed guides for each function, including examples and parameter descriptions.
 
 ### Things worth knowing

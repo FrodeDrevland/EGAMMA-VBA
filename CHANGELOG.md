@@ -3,39 +3,59 @@
 ## 1.3.0
 
 `EGAMMA_TPE_TO_PARAMS` now checks its own result, as the revised reference
-algorithm in the accompanying paper does. **The fitted parameters are
-unchanged** for every estimate that is still accepted, and the function still
-returns three values, so existing workbooks keep their layout.
+algorithm in the accompanying paper does, under the same acceptance rules as
+egamma 1.3.0. **The fitted parameters are unchanged** for every estimate that
+is still accepted, and the function still returns three values, so existing
+workbooks keep their layout.
+
+### Acceptance rules
+
+A result is accepted only if all three hold, where the tolerance is
+`fit_tolerance` (default 2.5E-11) for an ordinary fit and `ceiling_tolerance`
+(default 2E-5) for a fit at the shape ceiling:
+
+1. **Fit criterion.** The position residual, the normalised reproduction
+   error in exact arithmetic, is within the tolerance. No allowance is added.
+2. **Verifiability.** The reconstruction check's estimated rounding
+   uncertainty, 4 x machine epsilon x m / (high - low) with m the largest
+   magnitude among the elicited values, the location and the scaled
+   quantiles, is no larger than the tolerance.
+3. **Consistency.** The values reconstructed from the parameters agree with
+   those supplied to within the tolerance plus that uncertainty.
+
+A failure returns `#NUM!`; `EGAMMA_TPE_DIAGNOSTICS` names the rule that
+failed. The factor 4 is an estimate from a first-order count of rounded
+operations, not a proven bound.
 
 ### Changed
 
-- **The elicited values are recovered from the fitted parameters and checked.**
-  The largest difference from those supplied, as a fraction of the range, must
-  be within the tolerance of 2.5E-11 for an ordinary fit, or within the new
-  `ceiling_tolerance` for a fit at the shape ceiling. A fit that misses returns
-  `#NUM!`.
-- **A rounding allowance keeps the check from refusing exact fits.** The
-  recovery is ordinary floating-point arithmetic and adds rounding of about one
-  ulp of the largest magnitude involved; divided by a small range, that can
-  exceed the tolerance. The bound therefore adds four machine epsilons of that
-  magnitude, divided by the range. Without it, about 2-3% of ordinary fits in a
-  random sweep, mostly estimates whose values are large relative to their
-  range, would have been refused for rounding alone.
-- **Ceiling fits must meet `ceiling_tolerance`, default 2E-5.** All five
-  supported percentile conventions meet it. A symmetric estimate at a
-  convention near the median does not -- at 0.4999 the values would be
-  reproduced only to about 4.2% of the range -- and now returns `#NUM!`.
+- **Ceiling fits must meet `ceiling_tolerance`.** All five supported
+  conventions meet the default for a symmetric estimate; a convention near
+  the median does not -- at 0.4999 the residual is about 4.2% of the range.
+- **Estimates whose values are very large relative to their range are refused
+  as unverifiable** at the default tolerance once the values exceed about
+  28,000 times the range. Pass a looser `fit_tolerance`, or fit shifted values.
 - **A failure inside `GAMMA.INV`, or an overflow, returns `#NUM!`** rather
   than `#VALUE!`.
 
 ### Added
 
+- Optional `fit_tolerance`, `ceiling_tolerance` and `require_nonnegative`
+  arguments on `EGAMMA_TPE_TO_PARAMS`.
 - `EGAMMA_TPE_DIAGNOSTICS(low, likely, high, [low_probability],
-  [ceiling_tolerance])`, returning the status (`"converged"` or
-  `"approximation"`), the largest recovered-value error, and whether the
-  fitted support extends below zero.
-- `require_nonnegative` on `EGAMMA_TPE_TO_PARAMS`, which returns `#NUM!` for a
-  fit whose support extends below zero.
+  [fit_tolerance], [ceiling_tolerance], [require_nonnegative])`, returning the
+  status, position residual, reconstructed error, verification uncertainty and
+  whether the fitted support extends below zero. For a failed fit the status
+  names the failure and values not computed are `#N/A`.
+
+### Validation
+
+The rebuilt add-in was run in Excel 16.0 (build 20527) against Python 1.3.0 on
+276 estimates: the ten conformance vectors, the acceptance regression cases
+and a 240-estimate sweep. Excel and Python agreed on the outcome of every
+estimate. On the conformance vectors the parameters agree to 1.9E-15
+relative; across all accepted estimates to 2.3E-12, the difference coming
+from GAMMA.INV near symmetry.
 
 ## 1.2.1
 
