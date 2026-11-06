@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.3.0
+
+`EGAMMA_TPE_TO_PARAMS` now checks its own result, as the revised reference
+algorithm in the accompanying paper does. **The fitted parameters are
+unchanged** for every estimate that is still accepted, and the function still
+returns three values, so existing workbooks keep their layout.
+
+### Changed
+
+- **The elicited values are recovered from the fitted parameters and checked.**
+  The largest difference from those supplied, as a fraction of the range, must
+  be within the tolerance of 2.5E-11 for an ordinary fit, or within the new
+  `ceiling_tolerance` for a fit at the shape ceiling. A fit that misses returns
+  `#NUM!`.
+- **A rounding allowance keeps the check from refusing exact fits.** The
+  recovery is ordinary floating-point arithmetic and adds rounding of about one
+  ulp of the largest magnitude involved; divided by a small range, that can
+  exceed the tolerance. The bound therefore adds four machine epsilons of that
+  magnitude, divided by the range. Without it, about 2-3% of ordinary fits in a
+  random sweep, mostly estimates whose values are large relative to their
+  range, would have been refused for rounding alone.
+- **Ceiling fits must meet `ceiling_tolerance`, default 2E-5.** All five
+  supported percentile conventions meet it. A symmetric estimate at a
+  convention near the median does not -- at 0.4999 the values would be
+  reproduced only to about 4.2% of the range -- and now returns `#NUM!`.
+- **A failure inside `GAMMA.INV`, or an overflow, returns `#NUM!`** rather
+  than `#VALUE!`.
+
+### Added
+
+- `EGAMMA_TPE_DIAGNOSTICS(low, likely, high, [low_probability],
+  [ceiling_tolerance])`, returning the status (`"converged"` or
+  `"approximation"`), the largest recovered-value error, and whether the
+  fitted support extends below zero.
+- `require_nonnegative` on `EGAMMA_TPE_TO_PARAMS`, which returns `#NUM!` for a
+  fit whose support extends below zero.
+
 ## 1.2.1
 
 Corrections to the general distribution functions. **The three-point fit is
