@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.3.0
+
+`EGAMMA_TPE_TO_PARAMS` now checks its own result, as the revised reference
+algorithm in the accompanying paper does, under the same acceptance rules as
+egamma 1.3.0. **The fitted parameters are unchanged** for every estimate that
+is still accepted, and the function still returns three values, so existing
+workbooks keep their layout.
+
+### Acceptance rules
+
+A result is accepted only if all three hold, where the tolerance is
+`fit_tolerance` (default 2.5E-11) for an ordinary fit and `ceiling_tolerance`
+(default 2E-5) for a fit at the shape ceiling:
+
+1. **Fit criterion.** The position residual, the normalised reproduction
+   error in exact arithmetic, is within the tolerance. No allowance is added.
+2. **Verifiability.** The reconstruction check's estimated rounding
+   uncertainty, 4 x machine epsilon x m / (high - low) with m the largest
+   magnitude among the elicited values, the location and the scaled
+   quantiles, is no larger than the tolerance.
+3. **Consistency.** The values reconstructed from the parameters agree with
+   those supplied to within the tolerance plus that uncertainty.
+
+A failure returns `#NUM!`; `EGAMMA_TPE_DIAGNOSTICS` names the rule that
+failed. The factor 4 is an estimate from a first-order count of rounded
+operations, not a proven bound.
+
+### Changed
+
+- **Ceiling fits must meet `ceiling_tolerance`.** All five supported
+  conventions meet the default for a symmetric estimate; a convention near
+  the median does not -- at 0.4999 the residual is about 4.2% of the range.
+- **Estimates whose values are very large relative to their range are refused
+  as unverifiable** at the default tolerance once the values exceed about
+  28,000 times the range. Pass a looser `fit_tolerance`, or fit shifted values.
+- **A failure inside `GAMMA.INV`, or an overflow, returns `#NUM!`** rather
+  than `#VALUE!`.
+
+### Added
+
+- Optional `fit_tolerance`, `ceiling_tolerance` and `require_nonnegative`
+  arguments on `EGAMMA_TPE_TO_PARAMS`.
+- `EGAMMA_TPE_DIAGNOSTICS(low, likely, high, [low_probability],
+  [fit_tolerance], [ceiling_tolerance], [require_nonnegative])`, returning the
+  status, position residual, reconstructed error, verification uncertainty and
+  whether the fitted support extends below zero. For a failed fit the status
+  names the failure and values not computed are `#N/A`.
+
+### Validation
+
+The rebuilt add-in was run in Excel 16.0 (build 20527) against Python 1.3.0 on
+276 estimates: the ten conformance vectors, the acceptance regression cases
+and a 240-estimate sweep. Excel and Python agreed on the outcome of every
+estimate. On the conformance vectors the parameters agree to 1.9E-15
+relative; across all accepted estimates to 2.3E-12, the difference coming
+from GAMMA.INV near symmetry.
+
 ## 1.2.1
 
 Corrections to the general distribution functions. **The three-point fit is

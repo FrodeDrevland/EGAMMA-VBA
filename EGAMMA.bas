@@ -5,11 +5,9 @@ Option Explicit
 ' infinity, so a finite stand-in is needed. Excel's GAMMA.INV also loses
 ' reliability well before this value, which is why it is not set higher.
 '
-' This value doubles as the signal that an estimate was too near symmetry to
-' resolve: EGAMMA_TPE_TO_PARAMS returns exactly this shape in that case. A
-' caller that cares can compare the returned shape with 1E9. No separate
-' function reports it, because the shape is already in the cell the user typed
-' the formula in.
+' EGAMMA_TPE_TO_PARAMS returns exactly this shape when an estimate is too near
+' symmetry to resolve, and EGAMMA_TPE_DIAGNOSTICS reports that case as
+' "approximation" rather than "converged".
 '
 ' At this ceiling, and at the default 10th/90th percentile convention, the
 ' elicited values are reproduced to about 1.5E-5 of the elicited range rather
@@ -34,9 +32,28 @@ Private Const TOLERANCE As Double = 0.000000000025
 
 Private Const MAX_ITER As Long = 200
 
+' Default approximation tolerance for a fit that reaches the shape ceiling, as
+' a fraction of the elicited range. A ceiling fit is accepted only if its
+' position residual, the normalised reproduction error in exact arithmetic, is
+' at most this. It is separate from TOLERANCE because the ceiling error is set
+' by ALPHA_MAX and the percentile convention, not by the search. All five
+' supported conventions (0.01, 0.05, 0.10, 0.20, 0.25) meet it for a symmetric
+' estimate; 0.4999 does not, and its symmetric estimate is refused. Same value
+' as CEILING_TOLERANCE in the Python library.
+Private Const DEFAULT_CEILING_TOLERANCE As Double = 0.00002
+
+' Factor in the estimate of rounding uncertainty in the reconstruction check,
+' ROUNDING_FACTOR * MACHINE_EPS * m / (high - low), where m is the largest
+' magnitude among the elicited values, the location and the scaled quantiles.
+' A first-order count of the roughly eight rounded operations in the
+' reconstruction gives a factor of about 4. It is an estimate, not a proven
+' bound. Same value as ROUNDING_FACTOR in the Python library.
+Private Const ROUNDING_FACTOR As Double = 4
+Private Const MACHINE_EPS As Double = 2.22044604925031E-16
+
 ' Library version. Reported by EGAMMA_VERSION() so a workbook can record which
 ' build produced its numbers.
-Private Const EGAMMA_LIB_VERSION As String = "1.2.1"
+Private Const EGAMMA_LIB_VERSION As String = "1.3.0"
 
 
 Function EGAMMA_VERSION() As String
@@ -151,36 +168,267 @@ Function EGAMMA_KURT(alpha As Double) As Double
     EGAMMA_KURT = 6 / alpha
 End Function
 
-Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, Optional low_probability As Double = 0.1)
+' Fits a three-point estimate and returns {alpha, beta, delta}, or #N/A for
+' misordered values and #NUM! for any other failure. A result is accepted only
+' if (1) its position residual is within fit_tolerance, or within
+' ceiling_tolerance at the shape ceiling, with no allowance added; (2) the
+' estimated rounding uncertainty of the reconstruction check is no larger than
+' that tolerance, since otherwise the check cannot verify it; and (3) the values
+' reconstructed from the parameters agree with those supplied to within the
+' tolerance plus that uncertainty. EGAMMA_TPE_DIAGNOSTICS reports which rule a
+' failed fit missed.
+Function EGAMMA_TPE_TO_PARAMS(low As Double, likely As Double, high As Double, _
+                              Optional low_probability As Double = 0.1, _
+                              Optional fit_tolerance As Double = TOLERANCE, _
+                              Optional ceiling_tolerance As Double = DEFAULT_CEILING_TOLERANCE, _
+                              Optional require_nonnegative As Boolean = False)
     Dim returnVal(1 To 3) As Double
-    
-    If low_probability <= 0 Or low_probability >= 0.5 Then
-        EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNum)
+    Dim fit_status As String
+    Dim position_error As Double
+    Dim max_error As Double
+    Dim uncertainty As Double
+    Dim below_zero As Boolean
+    Dim code As Long
 
-    ElseIf low >= high Or low > likely Or high < likely Then
-        EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNA)
-
+    code = FitTPE(low, likely, high, low_probability, fit_tolerance, _
+                  ceiling_tolerance, require_nonnegative, _
+                  returnVal(1), returnVal(2), returnVal(3), fit_status, _
+                  position_error, max_error, uncertainty, below_zero)
+    If code <> 0 Then
+        EGAMMA_TPE_TO_PARAMS = CVErr(code)
     Else
-        ' A mode at an outer value gives a target position of zero and goes
-        ' through the ordinary search; there is no separate endpoint routine.
-        returnVal(1) = FindAlpha(low, likely, high, low_probability)
-
-        ' The shape search reports failure as a non-positive value. Propagate
-        ' it rather than using it as a shape parameter.
-        If returnVal(1) <= 0 Then
-            EGAMMA_TPE_TO_PARAMS = CVErr(xlErrNum)
-            Exit Function
-        End If
-
-        returnVal(2) = (high - low) / (WorksheetFunction.Gamma_Inv(1 - low_probability, returnVal(1), 1) - WorksheetFunction.Gamma_Inv(low_probability, returnVal(1), 1))
-        If high - likely < likely - low Then returnVal(2) = -returnVal(2)
-        returnVal(3) = likely - (returnVal(1) - 1) * returnVal(2)
         EGAMMA_TPE_TO_PARAMS = returnVal
     End If
 End Function
 
+' Returns {status, position_error, max_error, verification_uncertainty,
+' support_below_zero} for the same fit as EGAMMA_TPE_TO_PARAMS. Status is
+' "converged" or "approximation" for an accepted fit, and otherwise names the
+' failure: "ceiling tolerance not met", "precision insufficient",
+' "reconstruction inconsistent", "nonnegative support not met", "search failed"
+' or "numerical failure".
+' Values not computed before the failure are #N/A. Invalid arguments return the
+' same error value as EGAMMA_TPE_TO_PARAMS.
+Function EGAMMA_TPE_DIAGNOSTICS(low As Double, likely As Double, high As Double, _
+                                Optional low_probability As Double = 0.1, _
+                                Optional fit_tolerance As Double = TOLERANCE, _
+                                Optional ceiling_tolerance As Double = DEFAULT_CEILING_TOLERANCE, _
+                                Optional require_nonnegative As Boolean = False)
+    Dim returnVal(1 To 5) As Variant
+    Dim alpha As Double
+    Dim beta As Double
+    Dim delta As Double
+    Dim fit_status As String
+    Dim position_error As Double
+    Dim max_error As Double
+    Dim uncertainty As Double
+    Dim below_zero As Boolean
+    Dim code As Long
+
+    position_error = -1
+    max_error = -1
+    uncertainty = -1
+    code = FitTPE(low, likely, high, low_probability, fit_tolerance, _
+                  ceiling_tolerance, require_nonnegative, alpha, beta, delta, fit_status, _
+                  position_error, max_error, uncertainty, below_zero)
+    If code <> 0 And fit_status = "" Then
+        EGAMMA_TPE_DIAGNOSTICS = CVErr(code)
+        Exit Function
+    End If
+    returnVal(1) = fit_status
+    returnVal(2) = NumberOrNA(position_error)
+    returnVal(3) = NumberOrNA(max_error)
+    returnVal(4) = NumberOrNA(uncertainty)
+    If code = 0 Or fit_status = "nonnegative support not met" Then
+        returnVal(5) = below_zero
+    Else
+        returnVal(5) = CVErr(xlErrNA)
+    End If
+    EGAMMA_TPE_DIAGNOSTICS = returnVal
+End Function
+
+Private Function NumberOrNA(x As Double) As Variant
+    If x < 0 Then
+        NumberOrNA = CVErr(xlErrNA)
+    Else
+        NumberOrNA = x
+    End If
+End Function
+
+' The complete fit. Returns 0 on success, otherwise the Excel error code to
+' report. Argument errors leave fit_status empty; every later failure sets it to
+' name the rule that failed. An error raised inside GAMMA.INV, or an overflow,
+' is returned as a code rather than surfacing as #VALUE!.
+Private Function FitTPE(low As Double, likely As Double, high As Double, _
+                        low_prob As Double, fit_tolerance As Double, _
+                        ceiling_tolerance As Double, _
+                        require_nonnegative As Boolean, _
+                        ByRef alpha As Double, ByRef beta As Double, _
+                        ByRef delta As Double, ByRef fit_status As String, _
+                        ByRef position_error As Double, _
+                        ByRef max_error As Double, _
+                        ByRef uncertainty As Double, _
+                        ByRef below_zero As Boolean) As Long
+    Dim span As Double
+    Dim q_low As Double
+    Dim q_high As Double
+    Dim quantile_span As Double
+    Dim target_position As Double
+    Dim rec_low As Double
+    Dim rec_mode As Double
+    Dim rec_high As Double
+    Dim magnitude As Double
+    Dim acceptance As Double
+    Dim at_ceiling As Boolean
+
+    fit_status = ""
+    If low_prob <= 0 Or low_prob >= 0.5 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+    If 1 - low_prob = 1 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+    If fit_tolerance <= 0 Or fit_tolerance >= 0.5 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+    If ceiling_tolerance <= 0 Or ceiling_tolerance >= 0.5 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+    If low >= high Or low > likely Or high < likely Then
+        FitTPE = xlErrNA
+        Exit Function
+    End If
+
+    On Error GoTo numeric_failure
+    fit_status = "numerical failure"
+    span = high - low
+
+    ' A mode at an outer value gives a target position of zero and goes
+    ' through the ordinary search; there is no separate endpoint routine. The
+    ' search reports failure as a non-positive value.
+    alpha = FindAlpha(low, likely, high, low_prob, fit_tolerance)
+    If alpha <= 0 Then
+        fit_status = "search failed"
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+    at_ceiling = (alpha = ALPHA_MAX)
+
+    q_low = WorksheetFunction.Gamma_Inv(low_prob, alpha, 1)
+    q_high = WorksheetFunction.Gamma_Inv(1 - low_prob, alpha, 1)
+    quantile_span = q_high - q_low
+    If quantile_span <= 0 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    ' Position residual at the returned shape, computed exactly as the search
+    ' computes it. This is the accuracy claim, in exact arithmetic.
+    If high - likely < likely - low Then
+        target_position = (high - likely) / span
+    Else
+        target_position = (likely - low) / span
+    End If
+    position_error = Abs((alpha - 1 - q_low) / (q_high - q_low) - target_position)
+
+    beta = span / quantile_span
+    If high - likely < likely - low Then beta = -beta
+    delta = likely - (alpha - 1) * beta
+    If alpha <= 1 Or beta = 0 Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    ' Reconstruct the elicited values. Under reflection the lower elicited value
+    ' comes from the upper standard quantile.
+    If beta > 0 Then
+        rec_low = delta + beta * q_low
+        rec_high = delta + beta * q_high
+    Else
+        rec_low = delta + beta * q_high
+        rec_high = delta + beta * q_low
+    End If
+    rec_mode = delta + (alpha - 1) * beta
+    If rec_low >= rec_high Then
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    max_error = Abs(rec_low - low)
+    If Abs(rec_mode - likely) > max_error Then max_error = Abs(rec_mode - likely)
+    If Abs(rec_high - high) > max_error Then max_error = Abs(rec_high - high)
+    max_error = max_error / span
+
+    ' Estimated rounding uncertainty of max_error. The magnitude includes the
+    ' location and the scaled quantiles because at large shapes delta and
+    ' (alpha - 1) * beta can be far larger than the elicited values.
+    magnitude = Abs(low)
+    If Abs(likely) > magnitude Then magnitude = Abs(likely)
+    If Abs(high) > magnitude Then magnitude = Abs(high)
+    If Abs(delta) > magnitude Then magnitude = Abs(delta)
+    If Abs(beta * q_low) > magnitude Then magnitude = Abs(beta * q_low)
+    If Abs(beta * q_high) > magnitude Then magnitude = Abs(beta * q_high)
+    If Abs((alpha - 1) * beta) > magnitude Then magnitude = Abs((alpha - 1) * beta)
+    uncertainty = ROUNDING_FACTOR * MACHINE_EPS * magnitude / span
+
+    ' Rule 1: the position residual meets the tolerance, with no allowance.
+    If at_ceiling Then
+        acceptance = ceiling_tolerance
+        If position_error > acceptance Then
+            fit_status = "ceiling tolerance not met"
+            FitTPE = xlErrNum
+            Exit Function
+        End If
+    Else
+        acceptance = fit_tolerance
+        If position_error >= acceptance Then
+            fit_status = "search failed"
+            FitTPE = xlErrNum
+            Exit Function
+        End If
+    End If
+
+    ' Rule 2: the reconstruction check can verify that tolerance at all.
+    If uncertainty > acceptance Then
+        fit_status = "precision insufficient"
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    ' Rule 3: the reconstruction agrees with the fit.
+    If max_error > acceptance + uncertainty Then
+        fit_status = "reconstruction inconsistent"
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    If at_ceiling Then
+        fit_status = "approximation"
+    Else
+        fit_status = "converged"
+    End If
+
+    below_zero = (beta < 0 Or delta < 0)
+    If require_nonnegative And below_zero Then
+        fit_status = "nonnegative support not met"
+        FitTPE = xlErrNum
+        Exit Function
+    End If
+
+    FitTPE = 0
+    Exit Function
+
+numeric_failure:
+    fit_status = "numerical failure"
+    FitTPE = xlErrNum
+End Function
+
 Private Function FindAlpha(low As Double, mode As Double, high As Double, _
-                           Optional low_prob As Double = 0.1) As Double
+                           low_prob As Double, search_tolerance As Double) As Double
     ' Finds the shape parameter by bisection on the magnitude of skewness,
     ' matching the mode's position within the elicited range:
     '
@@ -243,7 +491,7 @@ Private Function FindAlpha(low As Double, mode As Double, high As Double, _
         alpha_candidate = 4 / (skew_mid ^ 2)
         candidate_position = ModePosition(alpha_candidate, low_prob)
 
-        If Abs(candidate_position - target_position) < TOLERANCE Then
+        If Abs(candidate_position - target_position) < search_tolerance Then
             FindAlpha = alpha_candidate
             Exit Function
         ElseIf candidate_position < target_position Then
@@ -420,7 +668,24 @@ Public Sub RegisterEGammaFunctions()
                 "low: Lower bound of three-point estimate.", _
                 "likely: Most likely (mode) value.", _
                 "high: Upper bound of three-point estimate.", _
-                "low_probability: Cumulative probability at low/high (default 0.1)." _
+                "low_probability: Cumulative probability at low/high (default 0.1).", _
+                "fit_tolerance: Accepted position residual for an ordinary fit, as a fraction of the range (default 2.5E-11).", _
+                "ceiling_tolerance: Accepted error at the shape ceiling, as a fraction of the range (default 2E-5).", _
+                "require_nonnegative: TRUE to refuse a fit whose support extends below zero (default FALSE)." _
+            )
+
+        .MacroOptions _
+            Macro:="EGAMMA_TPE_DIAGNOSTICS", _
+            Description:="Reports a three-point fit: status, position_error, max_error, verification_uncertainty, support_below_zero.", _
+            Category:="User Defined", _
+            ArgumentDescriptions:=Array( _
+                "low: Lower bound of three-point estimate.", _
+                "likely: Most likely (mode) value.", _
+                "high: Upper bound of three-point estimate.", _
+                "low_probability: Cumulative probability at low/high (default 0.1).", _
+                "fit_tolerance: Accepted position residual for an ordinary fit, as a fraction of the range (default 2.5E-11).", _
+                "ceiling_tolerance: Accepted error at the shape ceiling, as a fraction of the range (default 2E-5).", _
+                "require_nonnegative: TRUE to report a fit whose support extends below zero as failed (default FALSE)." _
             )
 
         .MacroOptions _
